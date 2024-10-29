@@ -33,6 +33,14 @@ class CountryType(Enum):
     COUNTRY_USA = 2
 
 
+class OfficeType(Enum):
+    OFFICE_DRUMMONDVILLE = 1
+    OFFICE_LAS_VEGAS = 2
+    OFFICE_RENO = 3
+    OFFICE_MONCTON = 4
+    OFFICE_AUSTIN = 5
+
+
 class Sexe:
     def __init__(self, sex_type: SexType, sex_name: str, icon_filename: str) -> None:
         self.name = sex_name
@@ -53,6 +61,16 @@ class CountryData:
         self.icon_filename = icon_filename
         self.rank = -1
 
+class OfficeData:
+    def __init__(self, office_type: OfficeType, office_name: str, icon_filename: str) -> None:
+        self.name = office_name
+        self.office_type = office_type
+        self.number = 0
+        self.total_points = 0
+        self.average_points = 0
+        self.icon_filename = icon_filename
+        self.rank = -1        
+
 
 class Choice:
     def __init__(self, box_number, box_style: BoxStyle, name, team_abreviation, nb_goals, nb_assists, nb_points, nb_wins):
@@ -69,7 +87,7 @@ class Choice:
 
 
 class Participant:
-    def __init__(self, name, choices: list, param_sex: SexType, param_country: CountryType):
+    def __init__(self, name, choices: list, param_sex: SexType, param_country: CountryType, param_office: OfficeType):
         self.name = name
         self.lowest_round = -1
         self.total_points = 0
@@ -81,6 +99,7 @@ class Participant:
         self.office_total_points = 0
         self.sex_type = param_sex
         self.country = param_country
+        self.office = param_office
 
 
 class Box:
@@ -230,63 +249,70 @@ def init_countries(countries: list[CountryData]) -> None:
     countries.append(CountryData(CountryType.COUNTRY_CANADA, "Canada", "canada.png"))
     countries.append(CountryData(CountryType.COUNTRY_USA, "USA", "usa.png"))
 
+def init_offices(offices: list[OfficeData]) -> None:
+    offices.append(OfficeData(OfficeType.OFFICE_DRUMMONDVILLE, "Drummondville", "drummondville.png"))
+    offices.append(OfficeData(OfficeType.OFFICE_LAS_VEGAS, "Las Vegas", "las_vegas.png"))
+    offices.append(OfficeData(OfficeType.OFFICE_RENO, "Reno", "reno.png"))
+    offices.append(OfficeData(OfficeType.OFFICE_MONCTON, "Moncton", "moncton.png"))
+    offices.append(OfficeData(OfficeType.OFFICE_AUSTIN, "Austin", "austin.png"))    
+
 
 def init_participants(participants: list) -> None:
-    participants.append(Participant("Denis Bisson", [0, 3, 7, 9, 13, 17, 22, 26, 32, 35, 43, 48, 50, 54, 60, 63, 67, 72, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Kevin Nguyen", [0, 5, 8, 9, 16, 20, 22, 26, 33, 38, 44, 47, 50, 55, 60, 63, 67, 73, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("François Vigneault", [0, 3, 7, 11, 16, 18, 22, 26, 33, 38, 44, 48, 51, 56, 58, 62, 67, 72, 77, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Hugues Labrecque", [2, 3, 7, 11, 16, 20, 22, 26, 33, 35, 41, 47, 53, 54, 60, 62, 68, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Pierre Guay", [0, 3, 7, 10, 16, 20, 22, 26, 33, 35, 44, 45, 52, 54, 60, 64, 67, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("François Léger", [1, 3, 6, 9, 14, 19, 22, 26, 33, 35, 43, 45, 52, 54, 60, 62, 69, 73, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Louis-Philippe Perreault", [2, 3, 6, 10, 16, 19, 24, 26, 31, 38, 41, 45, 50, 55, 61, 64, 67, 71, 74, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Miguel Piette", [0, 3, 7, 10, 16, 20, 22, 26, 33, 35, 43, 47, 50, 54, 60, 64, 69, 73, 76, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Derek Pacuk", [1, 3, 8, 9, 14, 20, 22, 27, 33, 35, 43, 48, 52, 57, 60, 64, 68, 70, 76, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("Mike Wabschall", [2, 4, 6, 10, 15, 20, 22, 27, 33, 39, 44, 47, 50, 54, 60, 64, 67, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("Mélanie Toutant", [2, 5, 8, 11, 16, 18, 24, 28, 33, 39, 44, 46, 50, 55, 60, 64, 67, 71, 75, 79], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Tommy Hamel", [1, 5, 8, 11, 14, 17, 22, 26, 33, 38, 44, 46, 50, 54, 61, 65, 69, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Olivier Lafrenière", [1, 5, 7, 9, 14, 18, 22, 26, 34, 38, 43, 49, 52, 54, 60, 62, 69, 73, 76, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Jeff Baker", [1, 5, 8, 9, 16, 18, 23, 28, 33, 39, 43, 46, 50, 54, 58, 64, 69, 73, 76, 78], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("Éric Colgan", [0, 3, 8, 11, 14, 20, 22, 28, 33, 37, 43, 47, 52, 54, 58, 64, 69, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Dalton Perse", [0, 4, 8, 10, 12, 19, 23, 27, 31, 37, 40, 48, 51, 57, 58, 63, 68, 73, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("François Hébert", [0, 5, 8, 11, 16, 18, 24, 29, 33, 35, 44, 46, 50, 56, 58, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Yves Lavoie", [0, 3, 8, 11, 12, 17, 22, 26, 33, 35, 43, 47, 50, 54, 58, 65, 67, 70, 77, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Alex Goguen", [0, 4, 8, 9, 16, 17, 22, 26, 33, 39, 43, 47, 50, 54, 60, 64, 67, 70, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Karim Bahsoun", [1, 3, 7, 9, 14, 17, 23, 27, 33, 35, 44, 46, 52, 54, 58, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Dominic Lachance", [0, 5, 8, 9, 16, 20, 22, 26, 33, 38, 43, 46, 50, 54, 60, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Yvan Paradis", [1, 3, 7, 11, 16, 20, 22, 26, 33, 37, 43, 47, 50, 55, 60, 64, 67, 71, 75, 80], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Marc Plante", [0, 5, 7, 9, 15, 20, 23, 26, 34, 38, 44, 47, 53, 54, 61, 65, 69, 70, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Sandra St-Onge", [1, 3, 8, 11, 14, 18, 22, 26, 31, 35, 44, 47, 50, 54, 60, 62, 67, 71, 75, 79], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Craig Vinciguerra", [2, 4, 8, 11, 16, 18, 24, 29, 32, 37, 44, 48, 50, 54, 60, 64, 69, 73, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("Stéphan Généreux", [0, 3, 8, 11, 16, 17, 22, 26, 33, 39, 43, 46, 50, 57, 60, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Casey Whalen", [0, 3, 7, 9, 15, 17, 22, 26, 33, 38, 43, 46, 53, 54, 60, 63, 67, 72, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("Frédéric Gilbert", [0, 5, 8, 11, 14, 20, 22, 26, 33, 39, 41, 46, 53, 56, 60, 63, 68, 73, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Marcel Lachance", [0, 5, 6, 10, 15, 17, 22, 25, 32, 38, 43, 46, 53, 55, 61, 62, 67, 71, 77, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Karine Descheneaux", [0, 4, 7, 9, 16, 20, 22, 29, 33, 36, 44, 48, 50, 54, 61, 64, 67, 70, 77, 79], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("François Dubreuil", [0, 4, 6, 9, 16, 19, 23, 25, 30, 38, 43, 47, 51, 54, 58, 63, 67, 72, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Mélanie Markis", [1, 3, 8, 9, 16, 19, 23, 26, 33, 36, 43, 47, 50, 54, 61, 63, 69, 71, 77, 81], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Luc Carignan", [2, 3, 8, 9, 16, 20, 22, 29, 33, 38, 43, 46, 50, 54, 58, 64, 68, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("François Pelletier", [0, 3, 7, 9, 16, 18, 22, 26, 33, 37, 44, 47, 50, 56, 60, 64, 67, 70, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Bruno Aird", [1, 5, 7, 11, 16, 19, 22, 26, 32, 37, 44, 47, 53, 55, 61, 63, 69, 73, 74, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Mike Perry", [1, 5, 8, 9, 14, 20, 22, 26, 33, 38, 43, 45, 52, 54, 60, 62, 69, 73, 75, 80], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("Andrew Burke", [0, 4, 7, 10, 15, 17, 22, 26, 33, 38, 43, 47, 50, 54, 59, 63, 67, 70, 77, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("Sébastien Morin", [1, 4, 6, 9, 14, 20, 22, 29, 33, 36, 44, 48, 50, 54, 61, 64, 67, 70, 77, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Armando Macias", [0, 3, 7, 11, 15, 20, 23, 26, 31, 38, 44, 48, 53, 56, 60, 62, 67, 73, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("Martin Pelletier", [2, 3, 7, 10, 16, 18, 22, 26, 34, 35, 44, 46, 50, 55, 58, 62, 66, 72, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Sébastien Blanchet", [0, 3, 7, 10, 13, 18, 23, 26, 33, 37, 44, 48, 53, 54, 60, 65, 66, 70, 77, 80], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Nicolas Gamache", [1, 3, 8, 9, 16, 18, 22, 25, 34, 38, 43, 49, 50, 55, 61, 62, 67, 71, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Samantha Poisson", [0, 4, 7, 9, 16, 20, 22, 25, 32, 39, 43, 45, 51, 56, 61, 63, 68, 72, 76, 78], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Sophie Chabot", [1, 3, 7, 11, 16, 20, 23, 27, 32, 36, 43, 48, 50, 56, 58, 62, 67, 73, 77, 78], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Robert Brillon", [1, 5, 7, 9, 13, 17, 23, 29, 31, 37, 44, 45, 50, 56, 60, 62, 67, 72, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Jessica Jercinovic", [2, 4, 8, 9, 16, 20, 22, 26, 30, 39, 41, 48, 51, 54, 61, 63, 66, 70, 76, 81], SexType.SEX_FEMALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("Louis Gunning", [1, 4, 8, 11, 16, 17, 24, 29, 32, 39, 41, 48, 52, 54, 59, 65, 66, 72, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("RJ Machado", [1, 4, 7, 9, 13, 17, 23, 27, 30, 39, 40, 48, 52, 57, 59, 62, 67, 71, 77, 80], SexType.SEX_MALE, CountryType.COUNTRY_USA))
-    participants.append(Participant("François-A. Désilets-Trempe", [1, 5, 8, 9, 16, 19, 23, 29, 31, 35, 43, 48, 50, 55, 60, 62, 68, 71, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Mathieu Paquette", [1, 5, 8, 10, 16, 17, 22, 27, 33, 39, 44, 45, 51, 54, 60, 62, 69, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Patrick Bellavance-Marcoux", [0, 5, 6, 10, 16, 21, 24, 27, 31, 37, 44, 45, 53, 54, 61, 63, 66, 73, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Luc McCutcheon", [0, 3, 7, 9, 14, 17, 22, 26, 33, 38, 43, 48, 50, 54, 60, 64, 67, 72, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Benoît Lapolice", [0, 3, 8, 9, 16, 20, 22, 26, 33, 36, 41, 46, 50, 54, 60, 64, 69, 72, 76, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Olivier Samson", [2, 3, 8, 10, 12, 17, 22, 26, 31, 39, 44, 48, 50, 54, 58, 62, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA))
-    participants.append(Participant("Vince Catalano", [0, 3, 8, 10, 14, 20, 22, 26, 32, 38, 43, 47, 51, 54, 58, 64, 69, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA))
+    participants.append(Participant("Denis Bisson", [0, 3, 7, 9, 13, 17, 22, 26, 32, 35, 43, 48, 50, 54, 60, 63, 67, 72, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Kevin Nguyen", [0, 5, 8, 9, 16, 20, 22, 26, 33, 38, 44, 47, 50, 55, 60, 63, 67, 73, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("François Vigneault", [0, 3, 7, 11, 16, 18, 22, 26, 33, 38, 44, 48, 51, 56, 58, 62, 67, 72, 77, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Hugues Labrecque", [2, 3, 7, 11, 16, 20, 22, 26, 33, 35, 41, 47, 53, 54, 60, 62, 68, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Pierre Guay", [0, 3, 7, 10, 16, 20, 22, 26, 33, 35, 44, 45, 52, 54, 60, 64, 67, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("François Léger", [1, 3, 6, 9, 14, 19, 22, 26, 33, 35, 43, 45, 52, 54, 60, 62, 69, 73, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Louis-Philippe Perreault", [2, 3, 6, 10, 16, 19, 24, 26, 31, 38, 41, 45, 50, 55, 61, 64, 67, 71, 74, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Miguel Piette", [0, 3, 7, 10, 16, 20, 22, 26, 33, 35, 43, 47, 50, 54, 60, 64, 69, 73, 76, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Derek Pacuk", [1, 3, 8, 9, 14, 20, 22, 27, 33, 35, 43, 48, 52, 57, 60, 64, 68, 70, 76, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Mike Wabschall", [2, 4, 6, 10, 15, 20, 22, 27, 33, 39, 44, 47, 50, 54, 60, 64, 67, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Mélanie Toutant", [2, 5, 8, 11, 16, 18, 24, 28, 33, 39, 44, 46, 50, 55, 60, 64, 67, 71, 75, 79], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Tommy Hamel", [1, 5, 8, 11, 14, 17, 22, 26, 33, 38, 44, 46, 50, 54, 61, 65, 69, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Olivier Lafrenière", [1, 5, 7, 9, 14, 18, 22, 26, 34, 38, 43, 49, 52, 54, 60, 62, 69, 73, 76, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Jeff Baker", [1, 5, 8, 9, 16, 18, 23, 28, 33, 39, 43, 46, 50, 54, 58, 64, 69, 73, 76, 78], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Éric Colgan", [0, 3, 8, 11, 14, 20, 22, 28, 33, 37, 43, 47, 52, 54, 58, 64, 69, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Dalton Perse", [0, 4, 8, 10, 12, 19, 23, 27, 31, 37, 40, 48, 51, 57, 58, 63, 68, 73, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("François Hébert", [0, 5, 8, 11, 16, 18, 24, 29, 33, 35, 44, 46, 50, 56, 58, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Yves Lavoie", [0, 3, 8, 11, 12, 17, 22, 26, 33, 35, 43, 47, 50, 54, 58, 65, 67, 70, 77, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Alex Goguen", [0, 4, 8, 9, 16, 17, 22, 26, 33, 39, 43, 47, 50, 54, 60, 64, 67, 70, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Karim Bahsoun", [1, 3, 7, 9, 14, 17, 23, 27, 33, 35, 44, 46, 52, 54, 58, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Dominic Lachance", [0, 5, 8, 9, 16, 20, 22, 26, 33, 38, 43, 46, 50, 54, 60, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Yvan Paradis", [1, 3, 7, 11, 16, 20, 22, 26, 33, 37, 43, 47, 50, 55, 60, 64, 67, 71, 75, 80], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Marc Plante", [0, 5, 7, 9, 15, 20, 23, 26, 34, 38, 44, 47, 53, 54, 61, 65, 69, 70, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Sandra St-Onge", [1, 3, 8, 11, 14, 18, 22, 26, 31, 35, 44, 47, 50, 54, 60, 62, 67, 71, 75, 79], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Craig Vinciguerra", [2, 4, 8, 11, 16, 18, 24, 29, 32, 37, 44, 48, 50, 54, 60, 64, 69, 73, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Stéphan Généreux", [0, 3, 8, 11, 16, 17, 22, 26, 33, 39, 43, 46, 50, 57, 60, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Casey Whalen", [0, 3, 7, 9, 15, 17, 22, 26, 33, 38, 43, 46, 53, 54, 60, 63, 67, 72, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Frédéric Gilbert", [0, 5, 8, 11, 14, 20, 22, 26, 33, 39, 41, 46, 53, 56, 60, 63, 68, 73, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Marcel Lachance", [0, 5, 6, 10, 15, 17, 22, 25, 32, 38, 43, 46, 53, 55, 61, 62, 67, 71, 77, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Karine Descheneaux", [0, 4, 7, 9, 16, 20, 22, 29, 33, 36, 44, 48, 50, 54, 61, 64, 67, 70, 77, 79], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("François Dubreuil", [0, 4, 6, 9, 16, 19, 23, 25, 30, 38, 43, 47, 51, 54, 58, 63, 67, 72, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Mélanie Markis", [1, 3, 8, 9, 16, 19, 23, 26, 33, 36, 43, 47, 50, 54, 61, 63, 69, 71, 77, 81], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Luc Carignan", [2, 3, 8, 9, 16, 20, 22, 29, 33, 38, 43, 46, 50, 54, 58, 64, 68, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("François Pelletier", [0, 3, 7, 9, 16, 18, 22, 26, 33, 37, 44, 47, 50, 56, 60, 64, 67, 70, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Bruno Aird", [1, 5, 7, 11, 16, 19, 22, 26, 32, 37, 44, 47, 53, 55, 61, 63, 69, 73, 74, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Mike Perry", [1, 5, 8, 9, 14, 20, 22, 26, 33, 38, 43, 45, 52, 54, 60, 62, 69, 73, 75, 80], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Andrew Burke", [0, 4, 7, 10, 15, 17, 22, 26, 33, 38, 43, 47, 50, 54, 59, 63, 67, 70, 77, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Sébastien Morin", [1, 4, 6, 9, 14, 20, 22, 29, 33, 36, 44, 48, 50, 54, 61, 64, 67, 70, 77, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Armando Macias", [0, 3, 7, 11, 15, 20, 23, 26, 31, 38, 44, 48, 53, 56, 60, 62, 67, 73, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Martin Pelletier", [2, 3, 7, 10, 16, 18, 22, 26, 34, 35, 44, 46, 50, 55, 58, 62, 66, 72, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Sébastien Blanchet", [0, 3, 7, 10, 13, 18, 23, 26, 33, 37, 44, 48, 53, 54, 60, 65, 66, 70, 77, 80], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Nicolas Gamache", [1, 3, 8, 9, 16, 18, 22, 25, 34, 38, 43, 49, 50, 55, 61, 62, 67, 71, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Samantha Poisson", [0, 4, 7, 9, 16, 20, 22, 25, 32, 39, 43, 45, 51, 56, 61, 63, 68, 72, 76, 78], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Sophie Chabot", [1, 3, 7, 11, 16, 20, 23, 27, 32, 36, 43, 48, 50, 56, 58, 62, 67, 73, 77, 78], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Robert Brillon", [1, 5, 7, 9, 13, 17, 23, 29, 31, 37, 44, 45, 50, 56, 60, 62, 67, 72, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Jessica Jercinovic", [2, 4, 8, 9, 16, 20, 22, 26, 30, 39, 41, 48, 51, 54, 61, 63, 66, 70, 76, 81], SexType.SEX_FEMALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Louis Gunning", [1, 4, 8, 11, 16, 17, 24, 29, 32, 39, 41, 48, 52, 54, 59, 65, 66, 72, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_RENO))
+    participants.append(Participant("RJ Machado", [1, 4, 7, 9, 13, 17, 23, 27, 30, 39, 40, 48, 52, 57, 59, 62, 67, 71, 77, 80], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_RENO))
+    participants.append(Participant("François-A. Désilets-Trempe", [1, 5, 8, 9, 16, 19, 23, 29, 31, 35, 43, 48, 50, 55, 60, 62, 68, 71, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Mathieu Paquette", [1, 5, 8, 10, 16, 17, 22, 27, 33, 39, 44, 45, 51, 54, 60, 62, 69, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Patrick Bellavance-Marcoux", [0, 5, 6, 10, 16, 21, 24, 27, 31, 37, 44, 45, 53, 54, 61, 63, 66, 73, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Luc McCutcheon", [0, 3, 7, 9, 14, 17, 22, 26, 33, 38, 43, 48, 50, 54, 60, 64, 67, 72, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Benoît Lapolice", [0, 3, 8, 9, 16, 20, 22, 26, 33, 36, 41, 46, 50, 54, 60, 64, 69, 72, 76, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Olivier Samson", [2, 3, 8, 10, 12, 17, 22, 26, 31, 39, 44, 48, 50, 54, 58, 62, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Vince Catalano", [0, 3, 8, 10, 14, 20, 22, 26, 32, 38, 43, 47, 51, 54, 58, 64, 69, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
 
     for iParticipantIndex, participant in enumerate(participants):
         participant.native_index = iParticipantIndex
@@ -569,7 +595,9 @@ def set_best_and_worse_choices_per_boxes(boxes: List[Box], choices: List[Choice]
 
 # Function that will copy specific files to the website directory.
 # These files are coming from the directoru .\ressources of the script.
-def copy_required_ressources(for_website_directory:str)->None:
+
+
+def copy_required_ressources(for_website_directory: str) -> None:
     console.print("Copying resource files...", style="yellow")
     shutil.copy(".\\ressources\\bluberi_logo.png", f"{for_website_directory}\\bluberi_logo.png")
     shutil.copy(".\\ressources\\usa.png", f"{for_website_directory}\\usa.png")
@@ -577,6 +605,7 @@ def copy_required_ressources(for_website_directory:str)->None:
     shutil.copy(".\\ressources\\global6.ico", f"{for_website_directory}\\global6.ico")
     console.print("Resource files copied!\n", style="bold green")
     console.print()
+
 
 def procedure_css_file(for_website_directory: str) -> None:
     with open(f"{for_website_directory}\\pool_style.css", 'w', encoding='utf-8', newline='\r\n') as f:
@@ -837,6 +866,7 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("}\n")
         f.write("\n")
 
+
 def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool) -> None:
     f.write("     <table class=\"ranking-table\">\n")
 
@@ -880,6 +910,7 @@ def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool
 
     f.write("     </table>\n")
 
+
 def write_footer(generation_timestamp: str, f) -> None:
     f.write("<br>\n")
     f.write("<table class=\"page-footer-table\">\n")
@@ -899,14 +930,15 @@ def write_footer(generation_timestamp: str, f) -> None:
     f.write(" </tr>\n")
     f.write("</table>\n")
 
+
 def write_header(generation_timestamp: str, f) -> None:
     f.write("<table class=\"page-header-table\">\n")
-    
+
     f.write(" <tr>\n")
     f.write("  <th>\n")
 
     f.write(f"  <img src=\"bluberi_logo.png\" alt=\"Bluberi Logo\">&nbsp;")
-    f.write( "  Bluberi Hockey Pool 2024-2025\n")
+    f.write("  Bluberi Hockey Pool 2024-2025\n")
     f.write(f"  &nbsp;<img src=\"bluberi_logo.png\" alt=\"Bluberi Logo\">")
     f.write("  </th>\n")
     f.write(" </tr>\n")
@@ -929,6 +961,7 @@ def write_header(generation_timestamp: str, f) -> None:
 
     f.write("</table>\n")
     f.write("<br>\n")
+
 
 def produce_ranking_grid(generation_timestamp: str, for_website_directory: str, participants: List[Participant]) -> None:
     # Let's generate a html file with the results
@@ -1126,7 +1159,7 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("\n")
         f.write("  <body>\n")
 
-        write_header(generation_timestamp, f)        
+        write_header(generation_timestamp, f)
 
         # Let's create a table with three elements
         f.write("     <table class=\"ranking-table\">\n")
@@ -1141,7 +1174,6 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("         <th class=\"ranking_header\">Participants</th>\n")
         f.write("         <th class=\"ranking_header\">Average</th>\n")
         f.write("       </tr>\n")
-
 
         row_color = "row_odd"
         previous_rank = -1
@@ -1201,6 +1233,166 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("  </body>\n")
         f.write("</html>\n")
 
+def write_ranking_office_table(f, participants: List[Participant], office: OfficeData) -> None:
+    f.write("     <table class=\"ranking-table\">\n")
+
+    f.write("       <tr>\n")
+    f.write(f"         <th colspan=\"3\" class=\"colspan-3\"><img src=\"{office.icon_filename}\" alt=\"{office.name}\">&nbsp;{office.name}&nbsp;<img src=\"{office.icon_filename}\" alt=\"{office.name}\"></th>\n")
+    f.write("       </tr>            \n")
+
+    f.write("       <tr>\n")
+    f.write("         <th class=\"ranking_header\">Rank</th>\n")
+    f.write("         <th class=\"ranking_header\">Name</th>\n")
+    f.write("         <th class=\"ranking_header\">Total Points</th>\n")
+    f.write("       </tr>\n")
+
+    sorted_participants = sorted(participants, key=lambda x: x.total_points, reverse=True)
+
+    # We now remove all the participants that are not from the office we are looking for
+    sorted_participants = [participant for participant in sorted_participants if participant.office == office.office_type]
+
+    row_color = "row_odd"
+    previous_rank = -1
+
+    for participant in sorted_participants:
+        if participant.rank != previous_rank:
+            if row_color == "row_even":
+                row_color = "row_odd"
+            else:
+                row_color = "row_even"
+            previous_rank = participant.rank
+
+        f.write(f"       <tr class=\"{row_color}\">\n")
+        f.write(f"         <td class=\"just_center\">{participant.rank}</td>\n")
+        f.write(f"         <td><a href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
+        f.write(f"         <td class=\"just_center\">{participant.total_points}</td>\n")
+        f.write("       </tr>\n")
+
+    f.write("     </table>\n")
+
+def produce_office_grid(generation_timestamp: str, for_website_directory: str, participants: List[Participant], offices: List[OfficeData]) -> None:
+    for participant in participants:
+        for office_participant in offices:
+            if participant.office == office_participant.office_type:
+                office_participant.number += 1
+                office_participant.total_points += participant.total_points
+                break
+
+    for office_participant in offices:
+        office_participant.average_points = office_participant.total_points / office_participant.number
+        # office_participant.average_points = round(office_participant.average_points, 2)
+        office_participant.average_points = f"{office_participant.average_points:.2f}"
+
+    # Let's sort based on the average points
+    sorted_office_participant = []
+    sorted_office_participant = sorted(offices, key=lambda x: x.average_points, reverse=True)
+
+    iPreviousTotalPoints = -1
+    office_participant_index = 0
+    iRank = -1
+
+    for office_participant_index, office_participant in enumerate(sorted_office_participant):
+        if office_participant.total_points != iPreviousTotalPoints:
+            iRank = office_participant_index + 1
+            iPreviousTotalPoints = office_participant.total_points
+        office_participant.rank = iRank
+
+    for office_participant in sorted_office_participant:
+        print(f"{office_participant.name}: {office_participant.average_points}")
+
+    # Let's generate a html file with the results
+    with open(f"{for_website_directory}\\office_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
+        f.write("<!DOCTYPE html>\n")
+        f.write("<html lang=\"en\">\n")
+        f.write("  <head>\n")
+        f.write("     <meta charset=\"UTF-8\">\n")
+        f.write(f"    <title>Stats by Offices (Generated on {generation_timestamp})</title>\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
+        f.write("  </head>\n")
+
+        f.write("\n")
+        f.write("  <body>\n")
+
+        write_header(generation_timestamp, f)
+
+        # Let's create a table with three elements
+        f.write("     <table class=\"ranking-table\">\n")
+
+        f.write("       <tr>\n")
+        f.write(f"         <th colspan=\"4\" class=\"colspan-4\">Stats by Offices</th>\n")
+        f.write("       </tr>\n")
+
+        f.write("       <tr>\n")
+        f.write("         <th class=\"ranking_header\">Rank</th>\n")
+        f.write("         <th class=\"ranking_header\">Office</th>\n")
+        f.write("         <th class=\"ranking_header\">Participants</th>\n")
+        f.write("         <th class=\"ranking_header\">Average</th>\n")
+        f.write("       </tr>\n")
+
+        row_color = "row_odd"
+        previous_rank = -1
+
+        for office_participant in sorted_office_participant:
+            if office_participant.rank != previous_rank:
+                if row_color == "row_even":
+                    row_color = "row_odd"
+                else:
+                    row_color = "row_even"
+                previous_rank = office_participant.rank
+
+            f.write(f"       <tr class=\"{row_color}\">\n")
+            f.write("         <td class=\"just_center\">\n")
+            f.write(f"        {office_participant.rank}\n")
+            f.write("         </td>\n")
+            f.write("         <td>\n")
+            f.write(f"         <img src=\"{office_participant.icon_filename}\" alt=\"{office_participant.name}\">&nbsp;{office_participant.name}\n")
+            f.write("         </td>\n")
+            f.write("         <td class=\"just_center\">\n")
+            f.write(f"         {office_participant.number}\n")
+            f.write("         </td>\n")
+            f.write("         <td  class=\"just_center\">\n")
+            f.write(f"         {office_participant.average_points}\n")
+            f.write("         </td>\n")
+            f.write("       </tr>\n")
+
+        f.write("     </table>\n")
+
+        f.write("<BR>\n")
+
+        # Let's create a table with three elements
+        # 1. One with a table with participants sorted by their point
+        # 2. One empty area
+        # 3. One with a table with participants sorted by their name
+        f.write("     <table class=\"outer-ranking-table\">\n")
+
+        # f.write("       <tr>\n")
+        # f.write(f"         <th colspan=\"2\" class=\"colspan-2\">Ranking (generated on {generation_timestamp})</th>\n")
+        # f.write("       </tr>\n")
+
+        f.write("       <tr>\n")
+
+        for office_participant in sorted_office_participant:
+            f.write("         <td>\n")
+            write_ranking_office_table(f, participants, office_participant)
+            f.write("         </td>\n")
+            f.write("         &nbsp;\n")
+        # f.write("         <td>\n")
+        # write_ranking_country_table(f, participants, sorted_office_participant[0])
+        # f.write("         </td>\n")
+        # f.write("         <td>\n")
+        # f.write("         &nbsp;\n")
+        # f.write("         </td>\n")
+        # f.write("         <td>\n")
+        # write_ranking_country_table(f, participants, sorted_office_participant[1])
+        # f.write("         </td>\n")
+        f.write("       </tr>\n")
+        f.write("     </table>\n")
+
+        write_footer(generation_timestamp, f)
+
+        f.write("  </body>\n")
+        f.write("</html>\n")
 
 def produce_personal_grid(generation_timestamp: str, for_website_directory: str, boxes: List[Box], choices: List[Choice], participants: List[Participant]) -> None:
     # Let's generate a html file with the results
@@ -1221,7 +1413,7 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
             f.write("\n")
             f.write("  <body>\n")
 
-            write_header(generation_timestamp, f)            
+            write_header(generation_timestamp, f)
 
             f.write("     <table class=\"outer-table\">\n")
 
@@ -1321,7 +1513,7 @@ def archive_all_files(for_website_directory: str, today_directory: str) -> str:
     return compressed_filename
 
 
-def do_all_the_work(upload_files: bool) -> None:
+def do_all_the_work(upload_files: bool, flag_compare_nhl_vs_officepools: bool) -> None:
     today_directory = f'.\\{datetime.date.today().strftime("%Y-%m-%d")}'
 
     # Let's set a variable of type string of the format YYYY-MM-DD @ hh:mm
@@ -1346,6 +1538,9 @@ def do_all_the_work(upload_files: bool) -> None:
     countries = []
     init_countries(countries)
 
+    offices = []
+    init_offices(offices)
+
     get_choices_skaters_stats(choices, download_directory)
     get_choices_goalies_stats(choices, download_directory)
     get_choices_teams_stats(choices, download_directory)
@@ -1360,7 +1555,8 @@ def do_all_the_work(upload_files: bool) -> None:
     set_who_chose_who(participants, choices)
     sort_participants(participants)
 
-    compare_nhl_vs_officepools(participants)
+    if flag_compare_nhl_vs_officepools == True:
+        compare_nhl_vs_officepools(participants)
 
     copy_required_ressources(for_website_directory)
     procedure_css_file(for_website_directory)
@@ -1368,6 +1564,8 @@ def do_all_the_work(upload_files: bool) -> None:
     produce_ranking_grid(report_datetime, for_website_directory, participants)
     produce_sex_grid(report_datetime, for_website_directory, participants)
     produce_country_grid(report_datetime, for_website_directory, participants, countries)
+    produce_office_grid(report_datetime, for_website_directory, participants, offices)
+
 
 #   compressed_file = archive_all_files(for_website_directory, today_directory)
 
@@ -1391,6 +1589,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="BLUBERI POOL GENERATOR")
     parser.add_argument('--upload', action='store_true', help='Once HTML file are generated, upload them to the FTP server')
+    parser.add_argument('--nocompare', action='store_true', help='Do not compare the NHL results with the OfficePools results')
 
     parser.print_help()
     console.print()
@@ -1399,4 +1598,8 @@ if __name__ == "__main__":
     if args.upload:
         flag_upload_to_ftp = True
 
-    do_all_the_work(flag_upload_to_ftp)
+    flag_compare_nhl_vs_officepools = True
+    if args.nocompare:
+        flag_compare_nhl_vs_officepools = False
+
+    do_all_the_work(flag_upload_to_ftp, flag_compare_nhl_vs_officepools)
