@@ -61,6 +61,7 @@ class CountryData:
         self.icon_filename = icon_filename
         self.rank = -1
 
+
 class OfficeData:
     def __init__(self, office_type: OfficeType, office_name: str, icon_filename: str) -> None:
         self.name = office_name
@@ -69,7 +70,7 @@ class OfficeData:
         self.total_points = 0
         self.average_points = 0
         self.icon_filename = icon_filename
-        self.rank = -1        
+        self.rank = -1
 
 
 class Choice:
@@ -249,12 +250,13 @@ def init_countries(countries: list[CountryData]) -> None:
     countries.append(CountryData(CountryType.COUNTRY_CANADA, "Canada", "canada.png"))
     countries.append(CountryData(CountryType.COUNTRY_USA, "USA", "usa.png"))
 
+
 def init_offices(offices: list[OfficeData]) -> None:
     offices.append(OfficeData(OfficeType.OFFICE_DRUMMONDVILLE, "Drummondville", "drummondville.png"))
     offices.append(OfficeData(OfficeType.OFFICE_LAS_VEGAS, "Las Vegas", "las_vegas.png"))
     offices.append(OfficeData(OfficeType.OFFICE_RENO, "Reno", "reno.png"))
     offices.append(OfficeData(OfficeType.OFFICE_MONCTON, "Moncton", "moncton.png"))
-    offices.append(OfficeData(OfficeType.OFFICE_AUSTIN, "Austin", "austin.png"))    
+    offices.append(OfficeData(OfficeType.OFFICE_AUSTIN, "Austin", "austin.png"))
 
 
 def init_participants(participants: list) -> None:
@@ -331,8 +333,9 @@ def validate_choices(choices: list, participants: list):
 
         if cumulate_choices != "012345678910111213141516171819":
             raise ValueError(f"Participant {participant.name} has invalid choices {cumulate_choices}")
-    console.print("If we've reached this point, there are all valid!\n", style="bold green")
+    console.print("If we've reached this point, there are all valid!", style="bold green")
 
+    console.print()
     console.print("Validating that we found stats from NHL web site for all choices...", style="yellow")
     nbErrors = 0
     for choice in choices:
@@ -345,7 +348,7 @@ def validate_choices(choices: list, participants: list):
 
     if nbErrors > 0:
         raise ValueError(f"There are {nbErrors} choices that were not found in the NHL web site!")
-    console.print("If we've reached this point, all choices were found in the NHL web site!\n", style="bold green")
+    console.print("If we've reached this point, all choices were found in the NHL web site!", style="bold green")
 
 
 def get_page_content(url1: str, filename1: str, url2=None, filename2=None) -> None:
@@ -598,14 +601,13 @@ def set_best_and_worse_choices_per_boxes(boxes: List[Box], choices: List[Choice]
 
 
 def copy_required_ressources(for_website_directory: str) -> None:
+    console.print()
     console.print("Copying resource files...", style="yellow")
     shutil.copy(".\\ressources\\bluberi_logo.png", f"{for_website_directory}\\bluberi_logo.png")
     shutil.copy(".\\ressources\\usa.png", f"{for_website_directory}\\usa.png")
     shutil.copy(".\\ressources\\canada.png", f"{for_website_directory}\\canada.png")
     shutil.copy(".\\ressources\\global6.ico", f"{for_website_directory}\\global6.ico")
-    console.print("Resource files copied!\n", style="bold green")
-    console.print()
-
+    console.print("Resource files copied!", style="bold green")
 
 def procedure_css_file(for_website_directory: str) -> None:
     with open(f"{for_website_directory}\\pool_style.css", 'w', encoding='utf-8', newline='\r\n') as f:
@@ -817,9 +819,8 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write(".ranking-table th.colspan-3 {\n")
         f.write("  background-color: darkblue;\n")
         f.write("  color: #ffffff;\n")
-        f.write("  font-size: 20px;\n")
-        f.write("  font-weight: bold;\n")
-        f.write("  text-align: center;\n")
+        f.write("  vertical-align: middle;\n")
+        f.write("  display: table-cell;\n")        
         f.write("}\n")
 
         f.write(".ranking-table th.colspan-4 {\n")
@@ -832,6 +833,13 @@ def procedure_css_file(for_website_directory: str) -> None:
 
         f.write(".just_center {\n")
         f.write("  text-align: center;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".just_center_vertical {\n")
+        f.write("  vertical-align: middle;\n")
+        f.write("  display: flex;\n")
+        f.write("  align-items: center;\n")
         f.write("}\n")
         f.write("\n")
 
@@ -1020,13 +1028,15 @@ def produce_sex_grid(generation_timestamp: str, for_website_directory: str, part
 
     for sex_participant in sex_participants:
         sex_participant.average_points = sex_participant.total_points / sex_participant.number
-        sex_participant.average_points = round(sex_participant.average_points, 1)
+        sex_participant.average_points = f"{sex_participant.average_points:.2f}"
 
     # Let's sort based on the average points
     sorted_sex_participant = sorted(sex_participants, key=lambda x: x.average_points, reverse=True)
 
+    console.print()
+    console.print("Stats by Gender", style="yellow")
     for sex_participant in sorted_sex_participant:
-        print(f"{sex_participant.name}: {sex_participant.average_points}")
+        console.print(f"{sex_participant.average_points} - {sex_participant.name}", style="bold green")
 
     # Let's generate a html file with the results
     with open(f"{for_website_directory}\\gender_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
@@ -1125,7 +1135,7 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
 
     for country_participant in countries:
         country_participant.average_points = country_participant.total_points / country_participant.number
-        country_participant.average_points = round(country_participant.average_points, 2)
+        country_participant.average_points = f"{country_participant.average_points:.2f}"
 
     # Let's sort based on the average points
     sorted_country_participant = []
@@ -1141,8 +1151,10 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
             iPreviousTotalPoints = country_participant.total_points
         country_participant.rank = iRank
 
+    console.print()
+    console.print("Stats by Country", style="yellow")
     for country_participant in sorted_country_participant:
-        print(f"{country_participant.name}: {country_participant.average_points}")
+        console.print(f"{country_participant.average_points} - {country_participant.name}", style="bold green")
 
     # Let's generate a html file with the results
     with open(f"{for_website_directory}\\country_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
@@ -1233,12 +1245,15 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("  </body>\n")
         f.write("</html>\n")
 
+
 def write_ranking_office_table(f, participants: List[Participant], office: OfficeData) -> None:
     f.write("     <table class=\"ranking-table\">\n")
 
     f.write("       <tr>\n")
-    f.write(f"         <th colspan=\"3\" class=\"colspan-3\"><img src=\"{office.icon_filename}\" alt=\"{office.name}\">&nbsp;{office.name}&nbsp;<img src=\"{office.icon_filename}\" alt=\"{office.name}\"></th>\n")
-    f.write("       </tr>            \n")
+    f.write(f"       <th colspan=\"3\" class=\"colspan-3\">\n")
+    f.write(f"         <img src=\"{office.icon_filename}\" alt=\"{office.name}\">&nbsp;{office.name}&nbsp;<img src=\"{office.icon_filename}\" alt=\"{office.name}\">\n")
+    f.write(f"       </th>\n")
+    f.write("       </tr>\n")
 
     f.write("       <tr>\n")
     f.write("         <th class=\"ranking_header\">Rank</th>\n")
@@ -1270,6 +1285,7 @@ def write_ranking_office_table(f, participants: List[Participant], office: Offic
 
     f.write("     </table>\n")
 
+
 def produce_office_grid(generation_timestamp: str, for_website_directory: str, participants: List[Participant], offices: List[OfficeData]) -> None:
     for participant in participants:
         for office_participant in offices:
@@ -1280,7 +1296,6 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
 
     for office_participant in offices:
         office_participant.average_points = office_participant.total_points / office_participant.number
-        # office_participant.average_points = round(office_participant.average_points, 2)
         office_participant.average_points = f"{office_participant.average_points:.2f}"
 
     # Let's sort based on the average points
@@ -1297,8 +1312,10 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
             iPreviousTotalPoints = office_participant.total_points
         office_participant.rank = iRank
 
+    console.print()
+    console.print("Stats by Offices", style="yellow")
     for office_participant in sorted_office_participant:
-        print(f"{office_participant.name}: {office_participant.average_points}")
+        console.print(f"{office_participant.average_points} - {office_participant.name}", style="bold green")
 
     # Let's generate a html file with the results
     with open(f"{for_website_directory}\\office_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
@@ -1345,7 +1362,7 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
             f.write("         <td class=\"just_center\">\n")
             f.write(f"        {office_participant.rank}\n")
             f.write("         </td>\n")
-            f.write("         <td>\n")
+            f.write("         <td class=\"just_center_vertical\">\n")
             f.write(f"         <img src=\"{office_participant.icon_filename}\" alt=\"{office_participant.name}\">&nbsp;{office_participant.name}\n")
             f.write("         </td>\n")
             f.write("         <td class=\"just_center\">\n")
@@ -1393,6 +1410,7 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
 
         f.write("  </body>\n")
         f.write("</html>\n")
+
 
 def produce_personal_grid(generation_timestamp: str, for_website_directory: str, boxes: List[Box], choices: List[Choice], participants: List[Participant]) -> None:
     # Let's generate a html file with the results
@@ -1478,9 +1496,6 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
             f.write("</html>\n")
 
 
-def upload_files_to_ftps(for_website_directory: str, participants: List[Participant]) -> None:
-    pass
-
 def archive_all_files(for_website_directory: str, today_directory: str) -> str:
     # Let's compress all the files in a zip file that will have the form: YYYY-MM-DD@hh-mm-ss.zip
     compressed_filename = os.path.join(today_directory, f"{datetime.date.today().strftime('%Y-%m-%d')}@{datetime.datetime.now().strftime('%H-%M-%S')}.zip")
@@ -1488,7 +1503,7 @@ def archive_all_files(for_website_directory: str, today_directory: str) -> str:
     return compressed_filename
 
 
-def do_all_the_work(upload_files: bool, flag_compare_nhl_vs_officepools: bool) -> None:
+def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     today_directory = f'.\\{datetime.date.today().strftime("%Y-%m-%d")}'
 
     # Let's set a variable of type string of the format YYYY-MM-DD @ hh:mm
@@ -1541,18 +1556,12 @@ def do_all_the_work(upload_files: bool, flag_compare_nhl_vs_officepools: bool) -
     produce_country_grid(report_datetime, for_website_directory, participants, countries)
     produce_office_grid(report_datetime, for_website_directory, participants, offices)
 
-
 #   compressed_file = archive_all_files(for_website_directory, today_directory)
-
-    if upload_files:
-        upload_files_to_ftps(for_website_directory, participants)
 
 
 if __name__ == "__main__":
     # Set the locale to French
     locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
-
-    flag_upload_to_ftp = False
 
     console.print('----------------------------------', style='bold green')
     console.print('BLUBERI POOL GENERATOR - ver 0.0.3', style='bold green')
@@ -1563,18 +1572,15 @@ if __name__ == "__main__":
         console.print(f'                   {sArgument}', style='yellow')
 
     parser = argparse.ArgumentParser(description="BLUBERI POOL GENERATOR")
-    parser.add_argument('--upload', action='store_true', help='Once HTML file are generated, upload them to the FTP server')
     parser.add_argument('--nocompare', action='store_true', help='Do not compare the NHL results with the OfficePools results')
 
     parser.print_help()
     console.print()
 
     args = parser.parse_args()
-    if args.upload:
-        flag_upload_to_ftp = True
 
     flag_compare_nhl_vs_officepools = True
     if args.nocompare:
         flag_compare_nhl_vs_officepools = False
 
-    do_all_the_work(flag_upload_to_ftp, flag_compare_nhl_vs_officepools)
+    do_all_the_work(flag_compare_nhl_vs_officepools)
