@@ -1479,32 +1479,7 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
 
 
 def upload_files_to_ftps(for_website_directory: str, participants: List[Participant]) -> None:
-    ftp_host = 'node2-ca.n0c.com'
-    ftp_user = 'poolbluberi@global6.com'
-    ftp_pass = 'R6B2.j4In!NwUWd8U+g>ogSH'
-    local_files_list = []
-    remote_dir = '.'
-
-    # Let's establish the list of files to upload
-    for iParticipantIndex, participant in enumerate(participants):
-        local_files_list.append(f"{for_website_directory}\\poolparticipant{iParticipantIndex}.html")
-    local_files_list.append(f"{for_website_directory}\\ranking.html")
-    local_files_list.append(f"{for_website_directory}\\pool_style.css?v=1.1")
-
-    with ftplib.FTP_TLS(ftp_host) as ftps:
-        print('725')
-        ftps.login(ftp_user, ftp_pass)
-        print('727')
-        ftps.prot_p()  # Secure data connection
-        print('729')
-        for file_path in local_files_list:
-            print(f"Uploading {file_path}...")
-            remote_path = file_path.split("\\")[-1]
-            print(f"remote_path: {remote_path}")
-            with open(file_path, 'rb') as file:
-                ftps.storbinary(f'STOR {remote_path}', file)
-            print(f"Uploaded {file_path} to {remote_path}")
-
+    pass
 
 def archive_all_files(for_website_directory: str, today_directory: str) -> str:
     # Let's compress all the files in a zip file that will have the form: YYYY-MM-DD@hh-mm-ss.zip
