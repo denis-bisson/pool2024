@@ -597,16 +597,22 @@ def set_best_and_worse_choices_per_boxes(boxes: List[Box], choices: List[Choice]
             box.worse_points = box.worse_choice_points
 
 # Function that will copy specific files to the website directory.
-# These files are coming from the directoru .\ressources of the script.
+# These files are coming from the directory .\ressources of the script.
 
 
-def copy_required_ressources(for_website_directory: str) -> None:
+def copy_required_ressources(for_website_directory: str, param_offices: List[OfficeData], param_countries: List[CountryData] ) -> None:
     console.print()
     console.print("Copying resource files...", style="yellow")
+
     shutil.copy(".\\ressources\\bluberi_logo.png", f"{for_website_directory}\\bluberi_logo.png")
-    shutil.copy(".\\ressources\\usa.png", f"{for_website_directory}\\usa.png")
-    shutil.copy(".\\ressources\\canada.png", f"{for_website_directory}\\canada.png")
     shutil.copy(".\\ressources\\global6.ico", f"{for_website_directory}\\global6.ico")
+
+    for office in param_offices:
+        shutil.copy(f".\\ressources\\{office.icon_filename}", f"{for_website_directory}\\{office.icon_filename.split('\\')[-1]}")    
+
+    for country in param_countries:
+        shutil.copy(f".\\ressources\\{country.icon_filename}", f"{for_website_directory}\\{country.icon_filename.split('\\')[-1]}")
+
     console.print("Resource files copied!", style="bold green")
 
 def procedure_css_file(for_website_directory: str) -> None:
@@ -932,6 +938,8 @@ def write_footer(generation_timestamp: str, f) -> None:
     f.write("&nbsp;")
     f.write("<a href=\"country_stats.html\">CANADA vs USA</a>\n")
     f.write("&nbsp;")
+    f.write("<a href=\"office_stats.html\">Bluberi Offices</a>\n")    
+    f.write("&nbsp;")
     f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2024/regular/Bluberi_Pool/bluberi2025\" target=\"officepools\">OfficePools</a>\n")
     f.write("  </td>\n")
 
@@ -962,6 +970,8 @@ def write_header(generation_timestamp: str, f) -> None:
     f.write("<a href=\"ranking.html\">Ranking</a>\n")
     f.write("&nbsp;")
     f.write("<a href=\"country_stats.html\">CANADA vs USA</a>\n")
+    f.write("&nbsp;")
+    f.write("<a href=\"office_stats.html\">Bluberi Offices</a>\n")
     f.write("&nbsp;")
     f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2024/regular/Bluberi_Pool/bluberi2025\" target=\"officepools\">OfficePools</a>\n")
     f.write("  </td>\n")
@@ -1376,33 +1386,19 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
         f.write("     </table>\n")
 
         f.write("<BR>\n")
-
         # Let's create a table with three elements
         # 1. One with a table with participants sorted by their point
         # 2. One empty area
         # 3. One with a table with participants sorted by their name
         f.write("     <table class=\"outer-ranking-table\">\n")
-
-        # f.write("       <tr>\n")
-        # f.write(f"         <th colspan=\"2\" class=\"colspan-2\">Ranking (generated on {generation_timestamp})</th>\n")
-        # f.write("       </tr>\n")
-
         f.write("       <tr>\n")
-
         for office_participant in sorted_office_participant:
             f.write("         <td>\n")
             write_ranking_office_table(f, participants, office_participant)
             f.write("         </td>\n")
+            f.write("         <td>\n")
             f.write("         &nbsp;\n")
-        # f.write("         <td>\n")
-        # write_ranking_country_table(f, participants, sorted_office_participant[0])
-        # f.write("         </td>\n")
-        # f.write("         <td>\n")
-        # f.write("         &nbsp;\n")
-        # f.write("         </td>\n")
-        # f.write("         <td>\n")
-        # write_ranking_country_table(f, participants, sorted_office_participant[1])
-        # f.write("         </td>\n")
+            f.write("         </td>\n")
         f.write("       </tr>\n")
         f.write("     </table>\n")
 
@@ -1548,7 +1544,7 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     if flag_compare_nhl_vs_officepools == True:
         compare_nhl_vs_officepools(participants)
 
-    copy_required_ressources(for_website_directory)
+    copy_required_ressources(for_website_directory, offices, countries)
     procedure_css_file(for_website_directory)
     produce_personal_grid(report_datetime, for_website_directory, boxes, choices, participants)
     produce_ranking_grid(report_datetime, for_website_directory, participants)
