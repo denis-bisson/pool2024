@@ -111,6 +111,47 @@ class Box:
         self.best_points = 0
         self.worse_points = 0
 
+def GeneratePlayersChoices(choices: list) -> None:
+    # Open the file "ChoicesToExtractFrom.txt" per block of 23 lines that will be stored into a list of strings that we will process
+    with open("ChoicesToExtractFrom.txt", 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    # Process the lines in blocks of 23
+    for i in range(0, len(lines), 23):
+        block = lines[i:i + 23]
+        # We isolate the name of the participant.
+        # It will always be in the first line of the block.
+        # It will beggin after the substring " - " and will stop at the character ":"
+        participant_name = block[0].strip().split(" - ")[1].split(":")[0]
+        # print(f"Processing participant: {participant_name }")
+        # We then process the lines 2 to 21 to get the choices.
+        # For each of these lines, the choice begins aften a tab character and ends before on of these two substrings: " (" or ", ".
+        participant_choices = []
+        AllChoices = []
+        for j in range(2, 22):
+            iBox = j - 2
+            line = block[j].strip()
+            if line == "":
+                continue
+            choice = line.split("\t")[1].split(" (")[0].split(", ")[0]
+
+            # We scan each element of the parameter "choices" to find the first one that contains the name of the choice.
+            # Once found, we set the variable "i_found_index" with the position it was found in the list.
+            i_found_index = -1
+            for k, c in enumerate(choices):
+                if c.box_number == iBox and choice in c.name: 
+                    i_found_index = k                    
+                    break
+                
+            if i_found_index == -1:
+                raise ValueError(f"The choice {choice} was not found in the list of choices.")
+            else:
+                AllChoices.append(i_found_index)
+            
+        # We print the list "AllChoices" with element separated by commas.
+        sStringChoices = ', '.join(str(e) for e in AllChoices)
+        print(f'participants.append(Participant("{participant_name}", [{sStringChoices}], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))')
+            
 
 def init_choices(choices: list):
     choices.append(Choice(0, BoxStyle.TBS_TEAM, "Tampa Bay Lightning", "TBL", 0, 0, 0, 0))
@@ -276,65 +317,57 @@ def init_offices(offices: list[OfficeData]) -> None:
 
 def init_participants(participants: list) -> None:
     participants.append(Participant("Denis Bisson", [4, 7, 12, 23, 28, 31, 34, 40, 45, 51, 52, 59, 63, 65, 68, 72, 78, 84, 87, 92], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Kevin Nguyen", [0, 5, 8, 9, 16, 20, 22, 26, 33, 38, 44, 47, 50, 55, 60, 63, 67, 73, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    # participants.append(Participant("François Vigneault", [0, 3, 7, 11, 16, 18, 22, 26, 33, 38, 44, 48, 51, 56, 58, 62, 67, 72, 77, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Hugues Labrecque", [2, 3, 7, 11, 16, 20, 22, 26, 33, 35, 41, 47, 53, 54, 60, 62, 68, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Pierre Guay", [0, 3, 7, 10, 16, 20, 22, 26, 33, 35, 44, 45, 52, 54, 60, 64, 67, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("François Léger", [1, 3, 6, 9, 14, 19, 22, 26, 33, 35, 43, 45, 52, 54, 60, 62, 69, 73, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
-    # participants.append(Participant("Louis-Philippe Perreault", [2, 3, 6, 10, 16, 19, 24, 26, 31, 38, 41, 45, 50, 55, 61, 64, 67, 71, 74, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
-    # participants.append(Participant("Miguel Piette", [0, 3, 7, 10, 16, 20, 22, 26, 33, 35, 43, 47, 50, 54, 60, 64, 69, 73, 76, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Derek Pacuk", [1, 3, 8, 9, 14, 20, 22, 27, 33, 35, 43, 48, 52, 57, 60, 64, 68, 70, 76, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    # participants.append(Participant("Mike Wabschall", [2, 4, 6, 10, 15, 20, 22, 27, 33, 39, 44, 47, 50, 54, 60, 64, 67, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
-    participants.append(Participant("Mike Wabschall", [4, 7, 12, 23, 28, 31, 34, 40, 45, 51, 52, 59, 63, 65, 68, 72, 78, 84, 87, 92], SexType.SEX_FEMALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
-    # participants.append(Participant("Mélanie Toutant", [2, 5, 8, 11, 16, 18, 24, 28, 33, 39, 44, 46, 50, 55, 60, 64, 67, 71, 75, 79], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    participants.append(Participant("Mélanie Toutant", [4, 7, 12, 23, 28, 31, 34, 40, 45, 51, 52, 59, 63, 65, 68, 72, 78, 84, 87, 92], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Tommy Hamel", [1, 5, 8, 11, 14, 17, 22, 26, 33, 38, 44, 46, 50, 54, 61, 65, 69, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Olivier Lafrenière", [1, 5, 7, 9, 14, 18, 22, 26, 34, 38, 43, 49, 52, 54, 60, 62, 69, 73, 76, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Jeff Baker", [1, 5, 8, 9, 16, 18, 23, 28, 33, 39, 43, 46, 50, 54, 58, 64, 69, 73, 76, 78], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    # participants.append(Participant("Éric Colgan", [0, 3, 8, 11, 14, 20, 22, 28, 33, 37, 43, 47, 52, 54, 58, 64, 69, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Dalton Perse", [0, 4, 8, 10, 12, 19, 23, 27, 31, 37, 40, 48, 51, 57, 58, 63, 68, 73, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    # participants.append(Participant("François Hébert", [0, 5, 8, 11, 16, 18, 24, 29, 33, 35, 44, 46, 50, 56, 58, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Yves Lavoie", [0, 3, 8, 11, 12, 17, 22, 26, 33, 35, 43, 47, 50, 54, 58, 65, 67, 70, 77, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Alex Goguen", [0, 4, 8, 9, 16, 17, 22, 26, 33, 39, 43, 47, 50, 54, 60, 64, 67, 70, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
-    participants.append(Participant("Alex Goguen", [4, 7, 12, 23, 28, 31, 34, 40, 45, 51, 52, 59, 63, 65, 68, 72, 78, 84, 87, 92], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
-    # participants.append(Participant("Karim Bahsoun", [1, 3, 7, 9, 14, 17, 23, 27, 33, 35, 44, 46, 52, 54, 58, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Dominic Lachance", [0, 5, 8, 9, 16, 20, 22, 26, 33, 38, 43, 46, 50, 54, 60, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Yvan Paradis", [1, 3, 7, 11, 16, 20, 22, 26, 33, 37, 43, 47, 50, 55, 60, 64, 67, 71, 75, 80], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Marc Plante", [0, 5, 7, 9, 15, 20, 23, 26, 34, 38, 44, 47, 53, 54, 61, 65, 69, 70, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Sandra St-Onge", [1, 3, 8, 11, 14, 18, 22, 26, 31, 35, 44, 47, 50, 54, 60, 62, 67, 71, 75, 79], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Craig Vinciguerra", [2, 4, 8, 11, 16, 18, 24, 29, 32, 37, 44, 48, 50, 54, 60, 64, 69, 73, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    participants.append(Participant("Craig Vinciguerra", [4, 7, 12, 23, 28, 31, 34, 40, 45, 51, 52, 59, 63, 65, 68, 72, 78, 84, 87, 92], SexType.SEX_FEMALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    # participants.append(Participant("Stéphan Généreux", [0, 3, 8, 11, 16, 17, 22, 26, 33, 39, 43, 46, 50, 57, 60, 64, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Casey Whalen", [0, 3, 7, 9, 15, 17, 22, 26, 33, 38, 43, 46, 53, 54, 60, 63, 67, 72, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    # participants.append(Participant("Frédéric Gilbert", [0, 5, 8, 11, 14, 20, 22, 26, 33, 39, 41, 46, 53, 56, 60, 63, 68, 73, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Marcel Lachance", [0, 5, 6, 10, 15, 17, 22, 25, 32, 38, 43, 46, 53, 55, 61, 62, 67, 71, 77, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Karine Descheneaux", [0, 4, 7, 9, 16, 20, 22, 29, 33, 36, 44, 48, 50, 54, 61, 64, 67, 70, 77, 79], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("François Dubreuil", [0, 4, 6, 9, 16, 19, 23, 25, 30, 38, 43, 47, 51, 54, 58, 63, 67, 72, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Mélanie Markis", [1, 3, 8, 9, 16, 19, 23, 26, 33, 36, 43, 47, 50, 54, 61, 63, 69, 71, 77, 81], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Luc Carignan", [2, 3, 8, 9, 16, 20, 22, 29, 33, 38, 43, 46, 50, 54, 58, 64, 68, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("François Pelletier", [0, 3, 7, 9, 16, 18, 22, 26, 33, 37, 44, 47, 50, 56, 60, 64, 67, 70, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Bruno Aird", [1, 5, 7, 11, 16, 19, 22, 26, 32, 37, 44, 47, 53, 55, 61, 63, 69, 73, 74, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Mike Perry", [1, 5, 8, 9, 14, 20, 22, 26, 33, 38, 43, 45, 52, 54, 60, 62, 69, 73, 75, 80], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    # participants.append(Participant("Andrew Burke", [0, 4, 7, 10, 15, 17, 22, 26, 33, 38, 43, 47, 50, 54, 59, 63, 67, 70, 77, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    # participants.append(Participant("Sébastien Morin", [1, 4, 6, 9, 14, 20, 22, 29, 33, 36, 44, 48, 50, 54, 61, 64, 67, 70, 77, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Armando Macias", [0, 3, 7, 11, 15, 20, 23, 26, 31, 38, 44, 48, 53, 56, 60, 62, 67, 73, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    # participants.append(Participant("Martin Pelletier", [2, 3, 7, 10, 16, 18, 22, 26, 34, 35, 44, 46, 50, 55, 58, 62, 66, 72, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Sébastien Blanchet", [0, 3, 7, 10, 13, 18, 23, 26, 33, 37, 44, 48, 53, 54, 60, 65, 66, 70, 77, 80], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Nicolas Gamache", [1, 3, 8, 9, 16, 18, 22, 25, 34, 38, 43, 49, 50, 55, 61, 62, 67, 71, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Samantha Poisson", [0, 4, 7, 9, 16, 20, 22, 25, 32, 39, 43, 45, 51, 56, 61, 63, 68, 72, 76, 78], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Sophie Chabot", [1, 3, 7, 11, 16, 20, 23, 27, 32, 36, 43, 48, 50, 56, 58, 62, 67, 73, 77, 78], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Robert Brillon", [1, 5, 7, 9, 13, 17, 23, 29, 31, 37, 44, 45, 50, 56, 60, 62, 67, 72, 75, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Jessica Jercinovic", [2, 4, 8, 9, 16, 20, 22, 26, 30, 39, 41, 48, 51, 54, 61, 63, 66, 70, 76, 81], SexType.SEX_FEMALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    # participants.append(Participant("Louis Gunning", [1, 4, 8, 11, 16, 17, 24, 29, 32, 39, 41, 48, 52, 54, 59, 65, 66, 72, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_RENO))
-    # participants.append(Participant("RJ Machado", [1, 4, 7, 9, 13, 17, 23, 27, 30, 39, 40, 48, 52, 57, 59, 62, 67, 71, 77, 80], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_RENO))
-    participants.append(Participant("Jeff Baker", [4, 7, 12, 23, 28, 31, 34, 40, 45, 51, 52, 59, 63, 65, 68, 72, 78, 84, 87, 92], SexType.SEX_FEMALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_RENO))
-    # participants.append(Participant("François-A. Désilets-Trempe", [1, 5, 8, 9, 16, 19, 23, 29, 31, 35, 43, 48, 50, 55, 60, 62, 68, 71, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Mathieu Paquette", [1, 5, 8, 10, 16, 17, 22, 27, 33, 39, 44, 45, 51, 54, 60, 62, 69, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Patrick Bellavance-Marcoux", [0, 5, 6, 10, 16, 21, 24, 27, 31, 37, 44, 45, 53, 54, 61, 63, 66, 73, 75, 78], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Luc McCutcheon", [0, 3, 7, 9, 14, 17, 22, 26, 33, 38, 43, 48, 50, 54, 60, 64, 67, 72, 74, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Benoît Lapolice", [0, 3, 8, 9, 16, 20, 22, 26, 33, 36, 41, 46, 50, 54, 60, 64, 69, 72, 76, 81], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Olivier Samson", [2, 3, 8, 10, 12, 17, 22, 26, 31, 39, 44, 48, 50, 54, 58, 62, 67, 71, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    # participants.append(Participant("Vince Catalano", [0, 3, 8, 10, 14, 20, 22, 26, 32, 38, 43, 47, 51, 54, 58, 64, 69, 73, 75, 79], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Craig Vinciguerra", [3, 9, 15, 19, 27, 31, 36, 40, 45, 51, 52, 59, 60, 64, 70, 73, 79, 83, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Hugues Labrecque", [2, 10, 15, 19, 25, 31, 36, 40, 46, 49, 52, 57, 61, 66, 69, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Yves Lavoie", [1, 10, 12, 19, 24, 31, 34, 43, 45, 51, 54, 59, 60, 65, 68, 73, 78, 82, 90, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Dylan Howe", [5, 7, 12, 19, 26, 31, 37, 39, 47, 48, 54, 56, 60, 65, 68, 72, 76, 82, 86, 92], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("François Vigneault", [3, 8, 14, 18, 24, 33, 37, 39, 46, 48, 52, 57, 63, 64, 69, 72, 76, 81, 86, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Brandon Smith", [5, 7, 15, 22, 26, 33, 36, 40, 45, 51, 53, 57, 60, 64, 69, 72, 79, 83, 88, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Pierre Guay", [5, 7, 16, 19, 24, 33, 36, 40, 45, 51, 52, 57, 60, 67, 70, 72, 76, 82, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Andrew McCallum", [3, 9, 14, 19, 24, 31, 34, 40, 47, 51, 52, 59, 60, 65, 70, 73, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Jeremie Cormier", [3, 10, 16, 19, 27, 31, 35, 40, 44, 48, 54, 59, 60, 64, 71, 73, 79, 81, 86, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Patrick Bellavance Marcoux", [5, 7, 17, 19, 24, 30, 36, 40, 45, 51, 54, 58, 63, 64, 70, 75, 79, 85, 87, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Eric Colgan", [3, 10, 12, 19, 24, 31, 34, 43, 46, 48, 54, 57, 63, 66, 69, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Yvan Paradis", [3, 8, 16, 19, 24, 30, 36, 43, 44, 50, 52, 56, 61, 67, 68, 75, 76, 81, 88, 92], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Jeff Baker", [3, 8, 15, 22, 28, 31, 36, 39, 45, 51, 52, 57, 60, 66, 71, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Samantha Poisson", [4, 8, 13, 22, 24, 31, 35, 43, 45, 50, 52, 58, 62, 65, 71, 72, 80, 81, 86, 91], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Bruno Aird", [3, 9, 13, 21, 27, 29, 38, 39, 44, 49, 52, 56, 60, 64, 71, 75, 77, 85, 86, 91], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Charles Rutherford", [3, 9, 12, 19, 24, 33, 36, 43, 45, 48, 54, 57, 63, 66, 70, 74, 76, 82, 86, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Dominic Lachance", [2, 10, 14, 19, 25, 31, 36, 40, 46, 51, 52, 59, 63, 65, 70, 72, 76, 82, 87, 92], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Luc McCutcheon", [3, 7, 16, 19, 27, 31, 36, 39, 44, 51, 52, 57, 60, 65, 71, 72, 77, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Olivier Lafrenière", [2, 8, 15, 22, 24, 33, 35, 43, 44, 49, 52, 59, 63, 67, 68, 72, 77, 83, 88, 94], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("François Hébert", [3, 10, 12, 22, 25, 33, 36, 43, 46, 48, 52, 57, 60, 66, 69, 72, 76, 85, 89, 92], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Francois Leger", [3, 7, 17, 19, 24, 33, 35, 40, 46, 51, 52, 58, 63, 67, 71, 72, 76, 82, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Benoit Lapolice", [3, 9, 12, 19, 25, 33, 34, 43, 46, 50, 52, 57, 61, 65, 70, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Sandra St-Onge", [2, 8, 16, 19, 24, 29, 36, 43, 45, 51, 54, 57, 60, 65, 69, 72, 76, 82, 86, 95], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Vince Catalano", [3, 8, 15, 19, 24, 33, 36, 40, 46, 51, 52, 59, 63, 67, 69, 72, 76, 81, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Derek Pacuk", [2, 7, 15, 22, 26, 31, 37, 43, 45, 51, 52, 58, 62, 67, 69, 75, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Scott McSorley", [2, 10, 15, 22, 27, 33, 36, 43, 45, 51, 52, 57, 60, 66, 69, 72, 76, 82, 90, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Nick Lape", [3, 7, 16, 23, 27, 30, 34, 39, 47, 50, 55, 59, 62, 65, 68, 75, 77, 84, 90, 92], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_RENO))
+    participants.append(Participant("Gabe Herod", [4, 6, 17, 23, 26, 30, 37, 42, 44, 49, 55, 56, 61, 65, 68, 75, 78, 85, 89, 92], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Quentin Langelot", [5, 8, 12, 21, 26, 30, 38, 40, 44, 50, 54, 57, 61, 67, 68, 72, 76, 84, 87, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Stéphan Généreux", [3, 6, 15, 19, 24, 30, 36, 42, 47, 50, 55, 56, 60, 65, 71, 75, 76, 85, 90, 94], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Mike Wabschall", [3, 10, 17, 20, 25, 33, 36, 43, 44, 51, 54, 59, 60, 65, 69, 73, 76, 82, 90, 91], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Mohamed Amine Daoud", [2, 7, 17, 22, 24, 31, 36, 43, 46, 49, 52, 57, 63, 67, 69, 72, 78, 82, 87, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Marc Plante", [5, 9, 14, 18, 25, 30, 35, 42, 44, 48, 54, 59, 60, 66, 70, 74, 77, 83, 89, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Joe Kaszupski", [3, 7, 15, 22, 27, 33, 34, 40, 45, 51, 52, 57, 60, 66, 69, 73, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Andrew Burke", [3, 7, 17, 19, 24, 29, 34, 43, 45, 49, 53, 57, 63, 65, 70, 72, 79, 81, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Miguel Piette", [3, 7, 12, 20, 24, 33, 34, 40, 47, 48, 52, 56, 61, 64, 69, 72, 79, 82, 87, 94], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Alex Goguen", [4, 7, 12, 19, 24, 31, 34, 40, 44, 51, 54, 59, 61, 67, 71, 75, 76, 81, 87, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Mélanie Toutant", [1, 8, 12, 19, 25, 31, 34, 43, 46, 48, 53, 59, 60, 65, 69, 72, 76, 82, 86, 93], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Michael Stazio", [3, 10, 15, 22, 25, 31, 36, 43, 46, 48, 52, 57, 60, 66, 69, 72, 76, 81, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Luc Carignan", [2, 9, 15, 22, 27, 33, 36, 43, 46, 51, 52, 59, 63, 64, 69, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Olivier Samson", [3, 7, 14, 18, 24, 31, 34, 39, 46, 51, 52, 57, 63, 64, 70, 72, 76, 81, 86, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Karine Descheneaux", [3, 10, 15, 23, 25, 31, 34, 43, 44, 51, 52, 56, 60, 64, 69, 72, 76, 82, 87, 93], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Mélanie Markis", [5, 10, 15, 19, 26, 33, 34, 40, 46, 49, 54, 58, 60, 65, 69, 75, 76, 83, 87, 93], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Ralph Benjamin Libao", [3, 8, 16, 19, 27, 31, 37, 40, 44, 51, 52, 57, 60, 65, 68, 72, 76, 81, 86, 92], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Dalin Son", [3, 10, 12, 19, 25, 33, 34, 40, 47, 51, 52, 56, 63, 67, 69, 73, 77, 82, 88, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Sophie Chabot", [1, 10, 12, 19, 28, 31, 37, 40, 45, 51, 55, 56, 60, 66, 69, 72, 77, 84, 87, 93], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Armando Macias", [3, 8, 16, 19, 26, 33, 36, 41, 46, 48, 52, 59, 60, 64, 70, 72, 76, 84, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Robert Brillon", [4, 8, 12, 22, 24, 33, 34, 43, 47, 51, 53, 57, 62, 65, 70, 72, 78, 82, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Claire Seemayer", [4, 9, 15, 21, 25, 31, 34, 43, 47, 49, 54, 57, 60, 64, 71, 72, 79, 84, 88, 94], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Erick Ndjomo", [1, 7, 17, 20, 25, 30, 34, 39, 44, 48, 53, 57, 63, 65, 71, 75, 79, 84, 86, 94], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Tommy Hamel", [3, 10, 12, 19, 24, 33, 34, 43, 46, 51, 52, 57, 61, 65, 69, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
 
     for iParticipantIndex, participant in enumerate(participants):
         participant.native_index = iParticipantIndex
@@ -550,6 +583,8 @@ def validate_officepools_points(participants: List[Participant]) -> None:
 
 
 def compare_nhl_vs_officepools(participants: List[Participant]) -> None:
+    console.print()
+    console.print("Comparing NHL points with OfficePools points...", style="yellow")
     nb_errors = 0
     for participant in participants:
         if participant.total_points != participant.office_total_points:
@@ -557,6 +592,8 @@ def compare_nhl_vs_officepools(participants: List[Participant]) -> None:
             print(f"ERROR: Participant:{participant.name} - NHL:{participant.total_points} - OfficePools:{participant.office_total_points}")
     if nb_errors > 0:
         raise ValueError(f"There are {nb_errors} participants that have different points between NHL and OfficePools!")
+    else:
+        console.print("If we've reached this point, all participants have the same points between NHL and OfficePools!", style="bold green")
 
 
 def set_lowest_round(participants: List[Participant], choices: List[Choice]) -> None:
@@ -716,7 +753,7 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".inner-table th {\n")
-        f.write(" width: 200px;\n")
+        f.write(" width: 230px;\n")
         f.write(" height: 20px;\n")
         f.write(" border-bottom: 1px solid silver;\n")
         f.write("}\n")
@@ -1060,7 +1097,10 @@ def produce_sex_grid(generation_timestamp: str, for_website_directory: str, part
                 break
 
     for sex_participant in sex_participants:
-        sex_participant.average_points = sex_participant.total_points / sex_participant.number
+        if sex_participant.number != 0:
+          sex_participant.average_points = sex_participant.total_points / sex_participant.number
+        else:
+          sex_participant.average_points = 0
         sex_participant.average_points = f"{sex_participant.average_points:.2f}"
 
     # Let's sort based on the average points
@@ -1167,7 +1207,10 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
                 break
 
     for country_participant in countries:
-        country_participant.average_points = country_participant.total_points / country_participant.number
+        if country_participant.number != 0:
+            country_participant.average_points = country_participant.total_points / country_participant.number
+        else:
+            country_participant.average_points = 0
         country_participant.average_points = f"{country_participant.average_points:.2f}"
 
     # Let's sort based on the average points
@@ -1328,7 +1371,10 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
                 break
 
     for office_participant in offices:
-        office_participant.average_points = office_participant.total_points / office_participant.number
+        if office_participant.number != 0:
+            office_participant.average_points = office_participant.total_points / office_participant.number
+        else:
+            office_participant.average_points = 0
         office_participant.average_points = f"{office_participant.average_points:.2f}"
 
     # Let's sort based on the average points
@@ -1537,6 +1583,10 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
 
     choices = []
     init_choices(choices)
+
+    # We want to generate the players choices only once at the begining of the season, from OfficePools report, we call this function and it will generate the choies.
+    # GeneratePlayersChoices(choices)
+    # sys.exit(0) 
 
     boxes = []
     init_boxes(choices, boxes)
