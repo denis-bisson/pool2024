@@ -15,6 +15,7 @@ import shutil
 import locale
 
 console = Console(highlight=False)
+gExternalPath = 'https://global6.com/bluberipool/20252026/'
 
 
 class BoxStyle(Enum):
@@ -111,6 +112,7 @@ class Box:
         self.best_points = 0
         self.worse_points = 0
 
+
 def GeneratePlayersChoices(choices: list) -> None:
     # Open the file "ChoicesToExtractFrom.txt" per block of 23 lines that will be stored into a list of strings that we will process
     with open("ChoicesToExtractFrom.txt", 'r', encoding='utf-8') as f:
@@ -139,19 +141,19 @@ def GeneratePlayersChoices(choices: list) -> None:
             # Once found, we set the variable "i_found_index" with the position it was found in the list.
             i_found_index = -1
             for k, c in enumerate(choices):
-                if c.box_number == iBox and choice in c.name: 
-                    i_found_index = k                    
+                if c.box_number == iBox and choice in c.name:
+                    i_found_index = k
                     break
-                
+
             if i_found_index == -1:
                 raise ValueError(f"The choice {choice} was not found in the list of choices.")
             else:
                 AllChoices.append(i_found_index)
-            
+
         # We print the list "AllChoices" with element separated by commas.
         sStringChoices = ', '.join(str(e) for e in AllChoices)
         print(f'participants.append(Participant("{participant_name}", [{sStringChoices}], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))')
-            
+
 
 def init_choices(choices: list):
     choices.append(Choice(0, BoxStyle.TBS_TEAM, "Tampa Bay Lightning", "TBL", 0, 0, 0, 0))
@@ -182,23 +184,23 @@ def init_choices(choices: list):
     choices.append(Choice(3, BoxStyle.TBS_TEAM, "Detroit Red Wings", "DET", 0, 0, 0, 0))
     choices.append(Choice(3, BoxStyle.TBS_TEAM, "Philadelphia Flyers", "PHI", 0, 0, 0, 0))
 
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Connor McDavid","EDM", 0, 0, 0, 0))
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Nikita Kucherov","TBL", 0, 0, 0, 0))
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Nathan MacKinnon","COL", 0, 0, 0, 0))
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Leon Draisaitl","EDM", 0, 0, 0, 0))
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Kirill Kaprizov","MIN", 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Connor McDavid", "EDM", 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Nikita Kucherov", "TBL", 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Nathan MacKinnon", "COL", 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Leon Draisaitl", "EDM", 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Kirill Kaprizov", "MIN", 0, 0, 0, 0))
 
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Auston Matthews","TOR", 0, 0, 0, 0))
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Mikko Rantanen","DAL", 0, 0, 0, 0))
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Jack Eichel","VGK", 0, 0, 0, 0))
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Clayton Keller","UTA", 0, 0, 0, 0))
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Mitchell Marner","VGK", 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Auston Matthews", "TOR", 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Mikko Rantanen", "DAL", 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Jack Eichel", "VGK", 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Clayton Keller", "UTA", 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Mitch Marner", "VGK", 0, 0, 0, 0))
 
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "Nick Suzuki","MTL", 0, 0, 0, 0))
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "Artemi Panarin","NYR", 0, 0, 0, 0))
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "David Pastrnak","BOS", 0, 0, 0, 0))
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "William Nylander","TOR", 0, 0, 0, 0))
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "Jesper Bratt","NJD", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "Nick Suzuki", "MTL", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "Artemi Panarin", "NYR", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "David Pastrnak", "BOS", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "William Nylander", "TOR", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "Jesper Bratt", "NJD", 0, 0, 0, 0))
 
     choices.append(Choice(7, BoxStyle.TBS_SKATERS, "Sidney Crosby", "PIT", 0, 0, 0, 0))
     choices.append(Choice(7, BoxStyle.TBS_SKATERS, "Cale Makar", "COL", 0, 0, 0, 0))
@@ -269,7 +271,6 @@ def init_choices(choices: list):
     choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Logan Thompson", "WSH", 0, 0, 0, 0))
     choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Filip Gustavsson", "MIN", 0, 0, 0, 0))
     choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Linus Ullmark", "OTT", 0, 0, 0, 0))
-
 
 
 def init_boxes(choices: list, boxes: list) -> None:
@@ -469,13 +470,12 @@ def fill_choices_skaters(choices: List[Choice], filename):
 
             choice_iter = itertools.dropwhile(lambda p: skater_name not in p.name, choices)
             choice = next(choice_iter, None)
-            if choice:              
+            if choice:
                 if (skater_name != "Elias Pettersson") or ((skater_name == "Elias Pettersson") and (cells[5].get_text() == "C")):
                     choice.found = True
                     choice.nb_goals = int(cells[7].get_text())
                     choice.nb_passes = int(cells[8].get_text())
                     choice.nb_points = choice.nb_goals+choice.nb_passes
-
 
 
 def fill_choices_goalies(choices: List[Choice], filename):
@@ -541,6 +541,19 @@ def fill_office_points(participants: List[Participant], filename: str) -> None:
                 participant.office_total_points = int(office_total_points[index_seeker])
                 break
 
+def fill_office_points_manually(participants: List[Participant], filename: str) -> None:
+    with open(filename, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+
+    for line in lines:
+        # Check if participant line hold a participant name
+        for participant in participants:
+            if participant.name in line:
+                # Get the first word after the participant name in the line.
+                points = line.split(participant.name)[1].strip().split()[0]
+                print(f"Manually setting participant {participant.name} with points {points}")
+                participant.office_total_points = int(points)
+                break
 
 def get_choices_skaters_stats(choices: List[Choice], download_directory: str) -> None:
     for i in range(7):
@@ -575,6 +588,9 @@ def get_officepools_points(participants: List[Participant], download_directory: 
     fill_office_points(participants, filename1)
     fill_office_points(participants, filename2)
 
+def get_officepools_points_manually(participants: List[Participant], download_directory: str) -> None:
+    filename = f"{download_directory}\\officepools_manual.lst"
+    fill_office_points_manually(participants, filename)
 
 def validate_officepools_points(participants: List[Participant]) -> None:
     for participant in participants:
@@ -589,9 +605,19 @@ def compare_nhl_vs_officepools(participants: List[Participant]) -> None:
     for participant in participants:
         if participant.total_points != participant.office_total_points:
             nb_errors += 1
+            print("-----------------------------------------------------")
             print(f"ERROR: Participant:{participant.name} - NHL:{participant.total_points} - OfficePools:{participant.office_total_points}")
+            print(f"Choices: {participant.choices}")
+
+            
     if nb_errors > 0:
-        raise ValueError(f"There are {nb_errors} participants that have different points between NHL and OfficePools!")
+        console.print("There are errors in the following participants:", style="bold red")
+        # Let's ask user if they abort the process or continue
+        user_input = input("Do you want to abort the process? (y/n): ")
+        if user_input.lower() == 'y':
+            raise ValueError(f"There are {nb_errors} participants that have different points between NHL and OfficePools!")
+        else:
+            console.print("Continuing the process despite the errors...", style="bold yellow")
     else:
         console.print("If we've reached this point, all participants have the same points between NHL and OfficePools!", style="bold green")
 
@@ -656,11 +682,27 @@ def set_best_and_worse_choices_per_boxes(boxes: List[Box], choices: List[Choice]
             box.best_points = box.best_choice_points
             box.worse_points = box.worse_choice_points
 
+# Compress to a zip file the website directory
+
+
+def compress_website_directory(website_directory: str, output_zip_filename: str) -> None:
+    console.print()
+    console.print(f"Compressing website directory '{website_directory}' to zip file '{output_zip_filename}'...", style="yellow")
+
+    # Let's delete the zip file if it already exists
+    try:
+        os.remove(output_zip_filename)
+    except FileNotFoundError:
+        pass
+
+    shutil.make_archive(output_zip_filename.replace('.zip', ''), 'zip', website_directory)
+    console.print(f"Website directory compressed to '{output_zip_filename}'!", style="bold green")
+
 # Function that will copy specific files to the website directory.
 # These files are coming from the directory .\ressources of the script.
 
 
-def copy_required_ressources(for_website_directory: str, param_offices: List[OfficeData], param_countries: List[CountryData] ) -> None:
+def copy_required_ressources(for_website_directory: str, param_offices: List[OfficeData], param_countries: List[CountryData]) -> None:
     console.print()
     console.print("Copying resource files...", style="yellow")
 
@@ -668,12 +710,13 @@ def copy_required_ressources(for_website_directory: str, param_offices: List[Off
     shutil.copy(".\\ressources\\global6.ico", f"{for_website_directory}\\global6.ico")
 
     for office in param_offices:
-        shutil.copy(f".\\ressources\\{office.icon_filename}", f"{for_website_directory}\\{office.icon_filename.split('\\')[-1]}")    
+        shutil.copy(f".\\ressources\\{office.icon_filename}", f"{for_website_directory}\\{office.icon_filename.split('\\')[-1]}")
 
     for country in param_countries:
         shutil.copy(f".\\ressources\\{country.icon_filename}", f"{for_website_directory}\\{country.icon_filename.split('\\')[-1]}")
 
     console.print("Resource files copied!", style="bold green")
+
 
 def procedure_css_file(for_website_directory: str) -> None:
     with open(f"{for_website_directory}\\pool_style.css", 'w', encoding='utf-8', newline='\r\n') as f:
@@ -886,7 +929,7 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("  background-color: darkblue;\n")
         f.write("  color: #ffffff;\n")
         f.write("  vertical-align: middle;\n")
-        f.write("  display: table-cell;\n")        
+        f.write("  display: table-cell;\n")
         f.write("}\n")
 
         f.write(".ranking-table th.colspan-4 {\n")
@@ -985,7 +1028,7 @@ def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool
     f.write("     </table>\n")
 
 
-def write_footer(generation_timestamp: str, f) -> None:
+def write_footer(generation_timestamp: str, f, use_external_path: bool = False) -> None:
     f.write("<br>\n")
     f.write("<table class=\"page-footer-table\">\n")
     f.write(" <tr>\n")
@@ -994,11 +1037,11 @@ def write_footer(generation_timestamp: str, f) -> None:
     f.write("  </td>\n")
 
     f.write("  <td>\n")
-    f.write("<a href=\"ranking.html\">Ranking</a>\n")
+    f.write(f"<a href=\"{gExternalPath}ranking.html\">Ranking</a>\n")
     f.write("&nbsp;")
-    f.write("<a href=\"country_stats.html\">CANADA vs USA</a>\n")
+    f.write(f"<a href=\"{gExternalPath}country_stats.html\">CANADA vs USA</a>\n")
     f.write("&nbsp;")
-    f.write("<a href=\"office_stats.html\">Bluberi Offices</a>\n")    
+    f.write(f"<a href=\"{gExternalPath}office_stats.html\">Bluberi Offices</a>\n")
     f.write("&nbsp;")
     f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026\" target=\"officepools\">OfficePools</a>\n")
     f.write("  </td>\n")
@@ -1007,15 +1050,19 @@ def write_footer(generation_timestamp: str, f) -> None:
     f.write("</table>\n")
 
 
-def write_header(generation_timestamp: str, f) -> None:
+def write_header(generation_timestamp: str, f, use_external_path: bool = False) -> None:
+    if use_external_path:
+        sub_path = gExternalPath
+    else:
+        sub_path = ""
     f.write("<table class=\"page-header-table\">\n")
 
     f.write(" <tr>\n")
     f.write("  <th>\n")
 
-    f.write(f"  <img src=\"bluberi_logo.png\" alt=\"Bluberi Logo\">&nbsp;")
+    f.write(f"  <img src=\"{sub_path}bluberi_logo.png\" alt=\"Bluberi Logo\">&nbsp;")
     f.write("  Bluberi Hockey Pool 2025-2026\n")
-    f.write(f"  &nbsp;<img src=\"bluberi_logo.png\" alt=\"Bluberi Logo\">")
+    f.write(f"  &nbsp;<img src=\"{sub_path}bluberi_logo.png\" alt=\"Bluberi Logo\">")
     f.write("  </th>\n")
     f.write(" </tr>\n")
 
@@ -1027,11 +1074,11 @@ def write_header(generation_timestamp: str, f) -> None:
 
     f.write(" <tr>\n")
     f.write("  <td class=link-td>\n")
-    f.write("<a href=\"ranking.html\">Ranking</a>\n")
+    f.write(f"<a href=\"{sub_path}ranking.html\">Ranking</a>\n")
     f.write("&nbsp;")
-    f.write("<a href=\"country_stats.html\">CANADA vs USA</a>\n")
+    f.write(f"<a href=\"{sub_path}country_stats.html\">CANADA vs USA</a>\n")
     f.write("&nbsp;")
-    f.write("<a href=\"office_stats.html\">Bluberi Offices</a>\n")
+    f.write(f"<a href=\"{sub_path}office_stats.html\">Bluberi Offices</a>\n")
     f.write("&nbsp;")
     f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026\" target=\"officepools\">OfficePools</a>\n")
     f.write("  </td>\n")
@@ -1098,9 +1145,9 @@ def produce_sex_grid(generation_timestamp: str, for_website_directory: str, part
 
     for sex_participant in sex_participants:
         if sex_participant.number != 0:
-          sex_participant.average_points = sex_participant.total_points / sex_participant.number
+            sex_participant.average_points = sex_participant.total_points / sex_participant.number
         else:
-          sex_participant.average_points = 0
+            sex_participant.average_points = 0
         sex_participant.average_points = f"{sex_participant.average_points:.2f}"
 
     # Let's sort based on the average points
@@ -1477,6 +1524,66 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
         f.write("</html>\n")
 
 
+def produce_email_message(generation_timestamp: str, for_website_directory: str, participants: List[Participant], offices: List[OfficeData]) -> None:
+    # Copy to email_participants list all the participants sorted by their total points
+    email_participants = sorted(participants, key=lambda x: x.total_points, reverse=True)
+
+    # Let's generate a html file with the results
+    with open(f"{for_website_directory}\\email_message.html", 'w', encoding='utf-8', newline='\r\n') as f:
+        f.write("<!DOCTYPE html>\n")
+        f.write("<html lang=\"en\">\n")
+        f.write("  <head>\n")
+        f.write("     <meta charset=\"UTF-8\">\n")
+        f.write(f"    <title>Bluberi Hockey Pool 2025-2026 (Generated on {generation_timestamp})</title>\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
+        f.write("  </head>\n")
+
+        f.write("\n")
+        f.write("  <body>\n")
+
+        write_header(generation_timestamp, f, use_external_path=True)
+
+        # Let's create a table with three elements
+        f.write("     <table class=\"ranking-table\">\n")
+
+        f.write("       <tr>\n")
+        f.write("         <th class=\"ranking_header\">Rank</th>\n")
+        f.write("         <th class=\"ranking_header\">Participants</th>\n")
+        f.write("         <th class=\"ranking_header\">Points</th>\n")
+        f.write("       </tr>\n")
+
+        row_color = "row_odd"
+        previous_rank = -1
+
+        for office_participant in email_participants:
+            if office_participant.rank != previous_rank:
+                if row_color == "row_even":
+                    row_color = "row_odd"
+                else:
+                    row_color = "row_even"
+                previous_rank = office_participant.rank
+
+            f.write(f"       <tr class=\"{row_color}\">\n")
+            f.write("         <td class=\"just_center\">\n")
+            f.write(f"          {office_participant.rank}\n")
+            f.write("         </td>\n")
+            f.write("         <td class=\"just_center_vertical\">\n")
+            f.write(f"          <a href=\"{gExternalPath}poolparticipant{office_participant.native_index}.html\">{office_participant.name}</a>\n")
+            f.write("         </td>\n")
+            f.write("         <td  class=\"just_center\">\n")
+            f.write(f"          {office_participant.total_points}\n")
+            f.write("         </td>\n")
+            f.write("       </tr>\n")
+
+        f.write("     </table>\n")
+
+        write_footer(generation_timestamp, f, use_external_path=True)
+
+        f.write("  </body>\n")
+        f.write("</html>\n")
+
+
 def produce_personal_grid(generation_timestamp: str, for_website_directory: str, boxes: List[Box], choices: List[Choice], participants: List[Participant]) -> None:
     # Let's generate a html file with the results
     for iParticipantIndex, participant in enumerate(participants):
@@ -1561,15 +1668,9 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
             f.write("</html>\n")
 
 
-def archive_all_files(for_website_directory: str, today_directory: str) -> str:
-    # Let's compress all the files in a zip file that will have the form: YYYY-MM-DD@hh-mm-ss.zip
-    compressed_filename = os.path.join(today_directory, f"{datetime.date.today().strftime('%Y-%m-%d')}@{datetime.datetime.now().strftime('%H-%M-%S')}.zip")
-    shutil.make_archive(compressed_filename, 'zip', for_website_directory)
-    return compressed_filename
-
-
 def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
-    today_directory = f'.\\{datetime.date.today().strftime("%Y-%m-%d")}'
+    today_string = datetime.date.today().strftime("%Y-%m-%d")
+    today_directory = f'.\\{today_string}'
 
     # Let's set a variable of type string of the format YYYY-MM-DD @ hh:mm
     now = datetime.datetime.now()
@@ -1586,7 +1687,7 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
 
     # We want to generate the players choices only once at the begining of the season, from OfficePools report, we call this function and it will generate the choies.
     # GeneratePlayersChoices(choices)
-    # sys.exit(0) 
+    # sys.exit(0)
 
     boxes = []
     init_boxes(choices, boxes)
@@ -1603,7 +1704,8 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     get_choices_skaters_stats(choices, download_directory)
     get_choices_goalies_stats(choices, download_directory)
     get_choices_teams_stats(choices, download_directory)
-    get_officepools_points(participants, download_directory)
+    # get_officepools_points(participants, download_directory)
+    get_officepools_points_manually(participants, download_directory)
 
     validate_choices(choices, participants)
     validate_officepools_points(participants)
@@ -1624,8 +1726,9 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     produce_sex_grid(report_datetime, for_website_directory, participants)
     produce_country_grid(report_datetime, for_website_directory, participants, countries)
     produce_office_grid(report_datetime, for_website_directory, participants, offices)
+    produce_email_message(report_datetime, for_website_directory, participants, offices)
 
-#   compressed_file = archive_all_files(for_website_directory, today_directory)
+    compress_website_directory(for_website_directory, f'c:\\tmp\\bluberi_pool_{today_string}.zip')
 
 
 if __name__ == "__main__":
@@ -1633,7 +1736,7 @@ if __name__ == "__main__":
     locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
     console.print('----------------------------------', style='bold green')
-    console.print('BLUBERI POOL GENERATOR - ver 0.0.3', style='bold green')
+    console.print('BLUBERI POOL GENERATOR - ver 1.0.1', style='bold green')
     console.print('----------------------------------', style='bold green')
     console.print()
     console.print(f'Number of argument:{len(sys.argv)}', style='yellow')
