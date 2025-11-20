@@ -267,7 +267,7 @@ def init_choices(choices: list):
     choices.append(Choice(18, BoxStyle.TBS_GOALIE, "Dustin Wolf", "CGY", 0, 0, 0, 0))
 
     choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Darcy Kuemper", "LAK", 0, 0, 0, 0))
-    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Sam Montembeault", "MTL", 0, 0, 0, 0))
+    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Samuel Montembeault", "MTL", 0, 0, 0, 0))
     choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Logan Thompson", "WSH", 0, 0, 0, 0))
     choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Filip Gustavsson", "MIN", 0, 0, 0, 0))
     choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Linus Ullmark", "OTT", 0, 0, 0, 0))
@@ -342,7 +342,7 @@ def init_participants(participants: list) -> None:
     participants.append(Participant("Benoit Lapolice", [3, 9, 12, 19, 25, 33, 34, 43, 46, 50, 52, 57, 61, 65, 70, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
     participants.append(Participant("Sandra St-Onge", [2, 8, 16, 19, 24, 29, 36, 43, 45, 51, 54, 57, 60, 65, 69, 72, 76, 82, 86, 95], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
     participants.append(Participant("Vince Catalano", [3, 8, 15, 19, 24, 33, 36, 40, 46, 51, 52, 59, 63, 67, 69, 72, 76, 81, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    participants.append(Participant("Derek Pacuk", [2, 7, 15, 22, 26, 31, 37, 43, 45, 51, 52, 58, 62, 67, 69, 75, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Derek Pacuk", [3, 7, 15, 22, 26, 31, 37, 43, 45, 51, 52, 58, 62, 67, 69, 75, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
     participants.append(Participant("Scott McSorley", [2, 10, 15, 22, 27, 33, 36, 43, 45, 51, 52, 57, 60, 66, 69, 72, 76, 82, 90, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
     participants.append(Participant("Nick Lape", [3, 7, 16, 23, 27, 30, 34, 39, 47, 50, 55, 59, 62, 65, 68, 75, 77, 84, 90, 92], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_RENO))
     participants.append(Participant("Gabe Herod", [4, 6, 17, 23, 26, 30, 37, 42, 44, 49, 55, 56, 61, 65, 68, 75, 78, 85, 89, 92], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
