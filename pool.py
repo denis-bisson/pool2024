@@ -1,3 +1,4 @@
+from operator import index
 import sys
 import os
 from selenium import webdriver
@@ -13,9 +14,12 @@ import argparse
 from rich.console import Console
 import shutil
 import locale
+import requests
 
 console = Console(highlight=False)
 gExternalPath = 'https://global6.com/bluberipool/20252026/'
+
+# https://github.com/Zmalski/NHL-API-Reference?tab=readme-ov-file#get-specific-player-info
 
 
 class BoxStyle(Enum):
@@ -75,9 +79,10 @@ class OfficeData:
 
 
 class Choice:
-    def __init__(self, box_number, box_style: BoxStyle, name, team_abreviation, nb_goals, nb_assists, nb_points, nb_wins):
+    def __init__(self, box_number, box_style: BoxStyle, nhl_id, name, team_abreviation, nb_goals, nb_assists, nb_points, nb_wins):
         self.box_number = box_number
         self.box_style = box_style
+        self.nhl_id = nhl_id
         self.name = name
         self.team_abreviation = team_abreviation
         self.found = False
@@ -85,7 +90,7 @@ class Choice:
         self.nb_assists = nb_assists
         self.nb_points = nb_points
         self.nb_wins = nb_wins
-        self.who_chose = []
+        self.who_chose = []        
 
 
 class Participant:
@@ -156,121 +161,121 @@ def GeneratePlayersChoices(choices: list) -> None:
 
 
 def init_choices(choices: list):
-    choices.append(Choice(0, BoxStyle.TBS_TEAM, "Tampa Bay Lightning", "TBL", 0, 0, 0, 0))
-    choices.append(Choice(0, BoxStyle.TBS_TEAM, "Carolina Hurricanes", "CAR", 0, 0, 0, 0))
-    choices.append(Choice(0, BoxStyle.TBS_TEAM, "Dallas Stars", "DAL", 0, 0, 0, 0))
-    choices.append(Choice(0, BoxStyle.TBS_TEAM, "Las Vegas Golden Knights", "VGK", 0, 0, 0, 0))
-    choices.append(Choice(0, BoxStyle.TBS_TEAM, "Florida Panthers", "FLA", 0, 0, 0, 0))
-    choices.append(Choice(0, BoxStyle.TBS_TEAM, "Colorado Avalanche", "COL", 0, 0, 0, 0))
+    choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Tampa Bay Lightning", "TBL", 0, 0, 0, 0))
+    choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Carolina Hurricanes", "CAR", 0, 0, 0, 0))
+    choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Dallas Stars", "DAL", 0, 0, 0, 0))
+    choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Las Vegas Golden Knights", "VGK", 0, 0, 0, 0))
+    choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Florida Panthers", "FLA", 0, 0, 0, 0))
+    choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Colorado Avalanche", "COL", 0, 0, 0, 0))
 
-    choices.append(Choice(1, BoxStyle.TBS_TEAM, "New Jersey Devils", "NJD", 0, 0, 0, 0))
-    choices.append(Choice(1, BoxStyle.TBS_TEAM, "Edmonton Oilers", "EDM", 0, 0, 0, 0))
-    choices.append(Choice(1, BoxStyle.TBS_TEAM, "Toronto Maple Leafs", "TOR", 0, 0, 0, 0))
-    choices.append(Choice(1, BoxStyle.TBS_TEAM, "Washington Capitals", "WSH", 0, 0, 0, 0))
-    choices.append(Choice(1, BoxStyle.TBS_TEAM, "Winnipeg Jets", "WPG", 0, 0, 0, 0))
-    choices.append(Choice(1, BoxStyle.TBS_TEAM, "Los Angeles Kings", "LAK", 0, 0, 0, 0))
+    choices.append(Choice(1, BoxStyle.TBS_TEAM, "0000000", "New Jersey Devils", "NJD", 0, 0, 0, 0))
+    choices.append(Choice(1, BoxStyle.TBS_TEAM, "0000000", "Edmonton Oilers", "EDM", 0, 0, 0, 0))
+    choices.append(Choice(1, BoxStyle.TBS_TEAM, "0000000", "Toronto Maple Leafs", "TOR", 0, 0, 0, 0))
+    choices.append(Choice(1, BoxStyle.TBS_TEAM, "0000000", "Washington Capitals", "WSH", 0, 0, 0, 0))
+    choices.append(Choice(1, BoxStyle.TBS_TEAM, "0000000", "Winnipeg Jets", "WPG", 0, 0, 0, 0))
+    choices.append(Choice(1, BoxStyle.TBS_TEAM, "0000000", "Los Angeles Kings", "LAK", 0, 0, 0, 0))
 
-    choices.append(Choice(2, BoxStyle.TBS_TEAM, "Montréal Canadiens", "MTL", 0, 0, 0, 0))
-    choices.append(Choice(2, BoxStyle.TBS_TEAM, "Columbus Blue Jackets", "CBJ", 0, 0, 0, 0))
-    choices.append(Choice(2, BoxStyle.TBS_TEAM, "St. Louis Blues", "STL", 0, 0, 0, 0))
-    choices.append(Choice(2, BoxStyle.TBS_TEAM, "Minnesota Wild", "MIN", 0, 0, 0, 0))
-    choices.append(Choice(2, BoxStyle.TBS_TEAM, "Ottawa Senators", "OTT", 0, 0, 0, 0))
-    choices.append(Choice(2, BoxStyle.TBS_TEAM, "New York Rangers", "NYR", 0, 0, 0, 0))
+    choices.append(Choice(2, BoxStyle.TBS_TEAM, "0000000", "Montréal Canadiens", "MTL", 0, 0, 0, 0))
+    choices.append(Choice(2, BoxStyle.TBS_TEAM, "0000000", "Columbus Blue Jackets", "CBJ", 0, 0, 0, 0))
+    choices.append(Choice(2, BoxStyle.TBS_TEAM, "0000000", "St. Louis Blues", "STL", 0, 0, 0, 0))
+    choices.append(Choice(2, BoxStyle.TBS_TEAM, "0000000", "Minnesota Wild", "MIN", 0, 0, 0, 0))
+    choices.append(Choice(2, BoxStyle.TBS_TEAM, "0000000", "Ottawa Senators", "OTT", 0, 0, 0, 0))
+    choices.append(Choice(2, BoxStyle.TBS_TEAM, "0000000", "New York Rangers", "NYR", 0, 0, 0, 0))
 
-    choices.append(Choice(3, BoxStyle.TBS_TEAM, "Anaheim Ducks", "ANA", 0, 0, 0, 0))
-    choices.append(Choice(3, BoxStyle.TBS_TEAM, "Vancouver Canucks", "VAN", 0, 0, 0, 0))
-    choices.append(Choice(3, BoxStyle.TBS_TEAM, "Seattle Kraken", "SEA", 0, 0, 0, 0))
-    choices.append(Choice(3, BoxStyle.TBS_TEAM, "New York Islanders", "NYI", 0, 0, 0, 0))
-    choices.append(Choice(3, BoxStyle.TBS_TEAM, "Detroit Red Wings", "DET", 0, 0, 0, 0))
-    choices.append(Choice(3, BoxStyle.TBS_TEAM, "Philadelphia Flyers", "PHI", 0, 0, 0, 0))
+    choices.append(Choice(3, BoxStyle.TBS_TEAM, "0000000", "Anaheim Ducks", "ANA", 0, 0, 0, 0))
+    choices.append(Choice(3, BoxStyle.TBS_TEAM, "0000000", "Vancouver Canucks", "VAN", 0, 0, 0, 0))
+    choices.append(Choice(3, BoxStyle.TBS_TEAM, "0000000", "Seattle Kraken", "SEA", 0, 0, 0, 0))
+    choices.append(Choice(3, BoxStyle.TBS_TEAM, "0000000", "New York Islanders", "NYI", 0, 0, 0, 0))
+    choices.append(Choice(3, BoxStyle.TBS_TEAM, "0000000", "Detroit Red Wings", "DET", 0, 0, 0, 0))
+    choices.append(Choice(3, BoxStyle.TBS_TEAM, "0000000", "Philadelphia Flyers", "PHI", 0, 0, 0, 0))
 
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Connor McDavid", "EDM", 0, 0, 0, 0))
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Nikita Kucherov", "TBL", 0, 0, 0, 0))
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Nathan MacKinnon", "COL", 0, 0, 0, 0))
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Leon Draisaitl", "EDM", 0, 0, 0, 0))
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "Kirill Kaprizov", "MIN", 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8478402", "Connor McDavid", "EDM", 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8476453", "Nikita Kucherov", "TBL", 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8477492", "Nathan MacKinnon", "COL", 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8477934", "Leon Draisaitl", "EDM", 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8478864", "Kirill Kaprizov", "MIN", 0, 0, 0, 0))
 
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Auston Matthews", "TOR", 0, 0, 0, 0))
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Mikko Rantanen", "DAL", 0, 0, 0, 0))
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Jack Eichel", "VGK", 0, 0, 0, 0))
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Clayton Keller", "UTA", 0, 0, 0, 0))
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "Mitch Marner", "VGK", 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8479318", "Auston Matthews", "TOR", 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8478420", "Mikko Rantanen", "DAL", 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8478403", "Jack Eichel", "VGK", 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8479343", "Clayton Keller", "UTA", 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8478483", "Mitch Marner", "VGK", 0, 0, 0, 0))
 
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "Nick Suzuki", "MTL", 0, 0, 0, 0))
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "Artemi Panarin", "NYR", 0, 0, 0, 0))
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "David Pastrnak", "BOS", 0, 0, 0, 0))
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "William Nylander", "TOR", 0, 0, 0, 0))
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "Jesper Bratt", "NJD", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8480018", "Nick Suzuki", "MTL", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8478550", "Artemi Panarin", "NYR", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8477956", "David Pastrnak", "BOS", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8477939", "William Nylander", "TOR", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8479407", "Jesper Bratt", "NJD", 0, 0, 0, 0))
 
-    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "Sidney Crosby", "PIT", 0, 0, 0, 0))
-    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "Cale Makar", "COL", 0, 0, 0, 0))
-    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "Brandon Hagel", "TBL", 0, 0, 0, 0))
-    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "Martin Necas", "COL", 0, 0, 0, 0))
-    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "Kyle Connor", "WPG", 0, 0, 0, 0))
+    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8471675", "Sidney Crosby", "PIT", 0, 0, 0, 0))
+    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8480069", "Cale Makar", "COL", 0, 0, 0, 0))
+    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8479542", "Brandon Hagel", "TBL", 0, 0, 0, 0))
+    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8480039", "Martin Necas", "COL", 0, 0, 0, 0))
+    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8478398", "Kyle Connor", "WPG", 0, 0, 0, 0))
 
-    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "Tim Stützle", "OTT", 0, 0, 0, 0))
-    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "Jason Robertson", "DAL", 0, 0, 0, 0))
-    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "Brayden Point", "TBL", 0, 0, 0, 0))
-    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "J.T. Miller", "NYR", 0, 0, 0, 0))
+    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8482116", "Tim Stützle", "OTT", 0, 0, 0, 0))
+    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8480027", "Jason Robertson", "DAL", 0, 0, 0, 0))
+    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8478010", "Brayden Point", "TBL", 0, 0, 0, 0))
+    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8476468", "J.T. Miller", "NYR", 0, 0, 0, 0))
 
-    choices.append(Choice(9, BoxStyle.TBS_SKATERS, "Mark Scheifele", "WPG", 0, 0, 0, 0))
-    choices.append(Choice(9, BoxStyle.TBS_SKATERS, "Connor Bedard", "CHI", 0, 0, 0, 0))
-    choices.append(Choice(9, BoxStyle.TBS_SKATERS, "Lucas Raymond", "DET", 0, 0, 0, 0))
-    choices.append(Choice(9, BoxStyle.TBS_SKATERS, "Sam Reinhart", "FLA", 0, 0, 0, 0))
+    choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8476460", "Mark Scheifele", "WPG", 0, 0, 0, 0))
+    choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8484144", "Connor Bedard", "CHI", 0, 0, 0, 0))
+    choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8482078", "Lucas Raymond", "DET", 0, 0, 0, 0))
+    choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8477933", "Sam Reinhart", "FLA", 0, 0, 0, 0))
 
-    choices.append(Choice(10, BoxStyle.TBS_SKATERS, "Jake Guentzel", "TBL", 0, 0, 0, 0))
-    choices.append(Choice(10, BoxStyle.TBS_SKATERS, "Filip Forsberg", "NSH", 0, 0, 0, 0))
-    choices.append(Choice(10, BoxStyle.TBS_SKATERS, "Sebastian Aho", "CAR", 0, 0, 0, 0))
-    choices.append(Choice(10, BoxStyle.TBS_SKATERS, "Dylan Larkin", "DET", 0, 0, 0, 0))
+    choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8477404", "Jake Guentzel", "TBL", 0, 0, 0, 0))
+    choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8476887", "Filip Forsberg", "NSH", 0, 0, 0, 0))
+    choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8478427", "Sebastian Aho", "CAR", 0, 0, 0, 0))
+    choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8477946", "Dylan Larkin", "DET", 0, 0, 0, 0))
 
-    choices.append(Choice(11, BoxStyle.TBS_SKATERS, "Matt Boldy", "MIN", 0, 0, 0, 0))
-    choices.append(Choice(11, BoxStyle.TBS_SKATERS, "Alex Ovechkin", "WSH", 0, 0, 0, 0))
-    choices.append(Choice(11, BoxStyle.TBS_SKATERS, "Seth Jarvis", "CAR", 0, 0, 0, 0))
-    choices.append(Choice(11, BoxStyle.TBS_SKATERS, "Dylan Strome", "WSH", 0, 0, 0, 0))
+    choices.append(Choice(11, BoxStyle.TBS_SKATERS, "8481557", "Matt Boldy", "MIN", 0, 0, 0, 0))
+    choices.append(Choice(11, BoxStyle.TBS_SKATERS, "8471214", "Alex Ovechkin", "WSH", 0, 0, 0, 0))
+    choices.append(Choice(11, BoxStyle.TBS_SKATERS, "8482093", "Seth Jarvis", "CAR", 0, 0, 0, 0))
+    choices.append(Choice(11, BoxStyle.TBS_SKATERS, "8478440", "Dylan Strome", "WSH", 0, 0, 0, 0))
 
-    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "Nico Hischier", "NJD", 0, 0, 0, 0))
-    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "Logan Cooley", "UTA", 0, 0, 0, 0))
-    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "JJ Peterka", "UTA", 0, 0, 0, 0))
-    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "Wyatt Johnston", "DAL", 0, 0, 0, 0))
+    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8480002", "Nico Hischier", "NJD", 0, 0, 0, 0))
+    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8483431", "Logan Cooley", "UTA", 0, 0, 0, 0))
+    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8482175", "JJ Peterka", "UTA", 0, 0, 0, 0))
+    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8482740", "Wyatt Johnston", "DAL", 0, 0, 0, 0))
 
-    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "Adrian Kempe", "LAK", 0, 0, 0, 0))
-    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "Cole Caufield", "MTL", 0, 0, 0, 0))
-    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "Travis Konecny", "PHI", 0, 0, 0, 0))
-    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "Macklin Celebrini", "SJS", 0, 0, 0, 0))
+    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8477960", "Adrian Kempe", "LAK", 0, 0, 0, 0))
+    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8481540", "Cole Caufield", "MTL", 0, 0, 0, 0))
+    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8478439", "Travis Konecny", "PHI", 0, 0, 0, 0))
+    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8484801", "Macklin Celebrini", "SJS", 0, 0, 0, 0))
 
-    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "Elias Pettersson", "VAN", 0, 0, 0, 0))
-    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "Tage Thompson", "BUF", 0, 0, 0, 0))
-    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "Roope Hintz", "DAL", 0, 0, 0, 0))
-    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "Brady Tkachuk", "OTT", 0, 0, 0, 0))
+    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8480012", "Elias Pettersson", "VAN", 0, 0, 0, 0))
+    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8479420", "Tage Thompson", "BUF", 0, 0, 0, 0))
+    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8478449", "Roope Hintz", "DAL", 0, 0, 0, 0))
+    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8480801", "Brady Tkachuk", "OTT", 0, 0, 0, 0))
 
-    choices.append(Choice(15, BoxStyle.TBS_SKATERS, "John Tavares", "TOR", 0, 0, 0, 0))
-    choices.append(Choice(15, BoxStyle.TBS_SKATERS, "Jordan Kyrou", "STL", 0, 0, 0, 0))
-    choices.append(Choice(15, BoxStyle.TBS_SKATERS, "Alex Tuch", "BUF", 0, 0, 0, 0))
-    choices.append(Choice(15, BoxStyle.TBS_SKATERS, "Mathew Barzal", "NYI", 0, 0, 0, 0))
+    choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8475166", "John Tavares", "TOR", 0, 0, 0, 0))
+    choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8479385", "Jordan Kyrou", "STL", 0, 0, 0, 0))
+    choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8477949", "Alex Tuch", "BUF", 0, 0, 0, 0))
+    choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8478445", "Mathew Barzal", "NYI", 0, 0, 0, 0))
 
-    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "Quinn Hughes", "VAN", 0, 0, 0, 0))
-    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "Rasmus Dahlin", "BUF", 0, 0, 0, 0))
-    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "Lane Hutson", "MTL", 0, 0, 0, 0))
-    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "Evan Bouchard", "EDM", 0, 0, 0, 0))
-    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "Adam Fox", "NYR", 0, 0, 0, 0))
+    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8480800", "Quinn Hughes", "VAN", 0, 0, 0, 0))
+    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8480839", "Rasmus Dahlin", "BUF", 0, 0, 0, 0))
+    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8483457", "Lane Hutson", "MTL", 0, 0, 0, 0))
+    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8480803", "Evan Bouchard", "EDM", 0, 0, 0, 0))
+    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8479323", "Adam Fox", "NYR", 0, 0, 0, 0))
 
-    choices.append(Choice(17, BoxStyle.TBS_GOALIE, "Adin Hill", "VGK", 0, 0, 0, 0))
-    choices.append(Choice(17, BoxStyle.TBS_GOALIE, "Connor Hellebuyck", "WPG", 0, 0, 0, 0))
-    choices.append(Choice(17, BoxStyle.TBS_GOALIE, "Jake Oettinger", "DAL", 0, 0, 0, 0))
-    choices.append(Choice(17, BoxStyle.TBS_GOALIE, "Andrei Vasilevskiy", "TBL", 0, 0, 0, 0))
-    choices.append(Choice(17, BoxStyle.TBS_GOALIE, "Igor Shesterkin", "NYR", 0, 0, 0, 0))
+    choices.append(Choice(17, BoxStyle.TBS_GOALIE, "8478499", "Adin Hill", "VGK", 0, 0, 0, 0))
+    choices.append(Choice(17, BoxStyle.TBS_GOALIE, "8476945", "Connor Hellebuyck", "WPG", 0, 0, 0, 0))
+    choices.append(Choice(17, BoxStyle.TBS_GOALIE, "8479979", "Jake Oettinger", "DAL", 0, 0, 0, 0))
+    choices.append(Choice(17, BoxStyle.TBS_GOALIE, "8476883", "Andrei Vasilevskiy", "TBL", 0, 0, 0, 0))
+    choices.append(Choice(17, BoxStyle.TBS_GOALIE, "8478048", "Igor Shesterkin", "NYR", 0, 0, 0, 0))
 
-    choices.append(Choice(18, BoxStyle.TBS_GOALIE, "Stuart Skinner", "EDM", 0, 0, 0, 0))
-    choices.append(Choice(18, BoxStyle.TBS_GOALIE, "Sergei Bobrovsky", "FLA", 0, 0, 0, 0))
-    choices.append(Choice(18, BoxStyle.TBS_GOALIE, "Jacob Markstrom", "NJD", 0, 0, 0, 0))
-    choices.append(Choice(18, BoxStyle.TBS_GOALIE, "Elvis Merzlikins", "CBJ", 0, 0, 0, 0))
-    choices.append(Choice(18, BoxStyle.TBS_GOALIE, "Dustin Wolf", "CGY", 0, 0, 0, 0))
+    choices.append(Choice(18, BoxStyle.TBS_GOALIE, "8479973", "Stuart Skinner", "EDM", 0, 0, 0, 0))
+    choices.append(Choice(18, BoxStyle.TBS_GOALIE, "8475683", "Sergei Bobrovsky", "FLA", 0, 0, 0, 0))
+    choices.append(Choice(18, BoxStyle.TBS_GOALIE, "8474593", "Jacob Markstrom", "NJD", 0, 0, 0, 0))
+    choices.append(Choice(18, BoxStyle.TBS_GOALIE, "8478007", "Elvis Merzlikins", "CBJ", 0, 0, 0, 0))
+    choices.append(Choice(18, BoxStyle.TBS_GOALIE, "8481692", "Dustin Wolf", "CGY", 0, 0, 0, 0))
 
-    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Darcy Kuemper", "LAK", 0, 0, 0, 0))
-    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Samuel Montembeault", "MTL", 0, 0, 0, 0))
-    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Logan Thompson", "WSH", 0, 0, 0, 0))
-    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Filip Gustavsson", "MIN", 0, 0, 0, 0))
-    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "Linus Ullmark", "OTT", 0, 0, 0, 0))
+    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "8475311", "Darcy Kuemper", "LAK", 0, 0, 0, 0))
+    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "8478470", "Samuel Montembeault", "MTL", 0, 0, 0, 0))
+    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "8480313", "Logan Thompson", "WSH", 0, 0, 0, 0))
+    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "8479406", "Filip Gustavsson", "MIN", 0, 0, 0, 0))
+    choices.append(Choice(19, BoxStyle.TBS_GOALIE, "8476999", "Linus Ullmark", "OTT", 0, 0, 0, 0))
 
 
 def init_boxes(choices: list, boxes: list) -> None:
@@ -554,6 +559,40 @@ def fill_office_points_manually(participants: List[Participant], filename: str) 
                 print(f"Manually setting participant {participant.name} with points {points}")
                 participant.office_total_points = int(points)
                 break
+
+def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -> None:
+    for index, choice in enumerate(choices):
+        if (choice.box_style == BoxStyle.TBS_SKATERS) or (choice.box_style == BoxStyle.TBS_GOALIE):
+            sPlayerID = choice.nhl_id
+            if sPlayerID != "0000000":
+                filename = f"{download_directory}\\choice_{index}.json"
+                # if "filename" already exists, we skip the download
+                # Let's check if the file exists
+                if not os.path.exists(filename):
+                    console.print(f"Downloading stats for skater player ID {sPlayerID} - {choice.name}...", style="yellow")
+                    url = f"https://api-web.nhle.com/v1/player/{sPlayerID}/landing"
+                    response = requests.get(url)
+
+                    # Save raw text (JSON) to a file
+                    with open(f"{filename}", "w", encoding="utf-8") as f:
+                        f.write(response.text)
+                    console.print("Downloaded successfully!", style="bold green")
+
+def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> None:
+    filename = f"{download_directory}\\teams_standing.json"
+
+    # Let's check if the file exists
+    if not os.path.exists(filename):
+        console.print(f"Downloading teams standings...", style="yellow")
+        url = f"https://api-web.nhle.com/v1/standings/now"
+        response = requests.get(url)
+
+        # Save raw text (JSON) to a file
+        with open(f"{filename}", "w", encoding="utf-8") as f:
+            f.write(response.text)
+
+        console.print("Downloaded successfully!", style="bold green")
+
 
 def get_choices_skaters_stats(choices: List[Choice], download_directory: str) -> None:
     for i in range(7):
@@ -1702,8 +1741,11 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     init_offices(offices)
 
     get_choices_skaters_stats(choices, download_directory)
+    get_choices_skaters_stats2(choices, download_directory)
+
     get_choices_goalies_stats(choices, download_directory)
     get_choices_teams_stats(choices, download_directory)
+    get_choices_teams_stats2(choices, download_directory)
     # get_officepools_points(participants, download_directory)
     get_officepools_points_manually(participants, download_directory)
 
@@ -1756,3 +1798,9 @@ if __name__ == "__main__":
         flag_compare_nhl_vs_officepools = False
 
     do_all_the_work(flag_compare_nhl_vs_officepools)
+
+    # Ask the user to press a key to exit
+    console.print()
+    console.print("Processing completed. Press Enter to exit...", style="blue")
+    input()
+    
