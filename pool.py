@@ -1814,7 +1814,7 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
 
     get_choices_skaters_stats2(choices, download_directory)
     get_choices_teams_stats2(choices, download_directory)
-    get_officepools_points_from_excel_file(participants, r'c:\tmp\custom.xls')
+    get_officepools_points_from_excel_file(participants, r'c:\Users\DBisson\Downloads\custom.xls')
 
     validate_choices(choices, participants)
     validate_officepools_points(participants)
