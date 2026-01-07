@@ -1,20 +1,23 @@
 from operator import index
 import sys
 import os
-from selenium import webdriver
-from selenium.webdriver.edge.options import Options
+# from selenium import webdriver
+# from selenium.webdriver.edge.options import Options
 import time
-import bs4
+# import bs4
 import itertools
 from enum import Enum
 from typing import List
 import datetime
-import ftplib
+# import ftplib
 import argparse
 from rich.console import Console
 import shutil
 import locale
 import requests
+import json
+import pandas as pd
+
 
 console = Console(highlight=False)
 gExternalPath = 'https://global6.com/bluberipool/20252026/'
@@ -164,7 +167,7 @@ def init_choices(choices: list):
     choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Tampa Bay Lightning", "TBL", 0, 0, 0, 0))
     choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Carolina Hurricanes", "CAR", 0, 0, 0, 0))
     choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Dallas Stars", "DAL", 0, 0, 0, 0))
-    choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Las Vegas Golden Knights", "VGK", 0, 0, 0, 0))
+    choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Vegas Golden Knights", "VGK", 0, 0, 0, 0))
     choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Florida Panthers", "FLA", 0, 0, 0, 0))
     choices.append(Choice(0, BoxStyle.TBS_TEAM, "0000000", "Colorado Avalanche", "COL", 0, 0, 0, 0))
 
@@ -380,6 +383,7 @@ def init_participants(participants: list) -> None:
 
 
 def validate_choices(choices: list, participants: list):
+    console.print()
     console.print("Validating if choices for our participants are valid...", style="yellow")
 
     for participant in participants:
@@ -410,56 +414,56 @@ def validate_choices(choices: list, participants: list):
     console.print("If we've reached this point, all choices were found in the NHL web site!", style="bold green")
 
 
-def get_page_content(url1: str, filename1: str, url2=None, filename2=None) -> None:
-    nb_pages_already_downloaded = 0
+# def get_page_content(url1: str, filename1: str, url2=None, filename2=None) -> None:
+#     nb_pages_already_downloaded = 0
 
-    try:
-        with open(filename1, 'r', encoding='utf-8') as f:
-            nb_pages_already_downloaded += 1
-    except FileNotFoundError:
-        pass
+#     try:
+#         with open(filename1, 'r', encoding='utf-8') as f:
+#             nb_pages_already_downloaded += 1
+#     except FileNotFoundError:
+#         pass
 
-    if url2 and filename2:
-        try:
-            with open(filename2, 'r', encoding='utf-8') as f:
-                nb_pages_already_downloaded += 1
-        except FileNotFoundError:
-            pass
+#     if url2 and filename2:
+#         try:
+#             with open(filename2, 'r', encoding='utf-8') as f:
+#                 nb_pages_already_downloaded += 1
+#         except FileNotFoundError:
+#             pass
 
-    if url2 and filename2:
-        if nb_pages_already_downloaded == 2:
-            return
-    else:
-        if nb_pages_already_downloaded == 1:
-            return
+#     if url2 and filename2:
+#         if nb_pages_already_downloaded == 2:
+#             return
+#     else:
+#         if nb_pages_already_downloaded == 1:
+#             return
 
-    # Set up Edge options for headless mode
-    options = Options()
-    options.add_argument('--headless')
+#     # Set up Edge options for headless mode
+#     options = Options()
+#     options.add_argument('--headless')
 
-    # Set up Edge webdriver
-    driver = webdriver.Edge()
+#     # Set up Edge webdriver
+#     driver = webdriver.Edge()
 
-    # Open the webpage
-    driver.get(url1)
-    time.sleep(20)
+#     # Open the webpage
+#     driver.get(url1)
+#     time.sleep(20)
 
-    # Now we save the page content to a file
-    with open(filename1, 'w', encoding='utf-8') as f:
-        f.write(driver.page_source)
+#     # Now we save the page content to a file
+#     with open(filename1, 'w', encoding='utf-8') as f:
+#         f.write(driver.page_source)
 
-    if url2 and filename2:
-        # Open the webpage
-        driver.get(url2)
-        time.sleep(20)
-        driver.refresh()
-        time.sleep(20)
+#     if url2 and filename2:
+#         # Open the webpage
+#         driver.get(url2)
+#         time.sleep(20)
+#         driver.refresh()
+#         time.sleep(20)
 
-        # Now we save the page content to a file
-        with open(filename2, 'w', encoding='utf-8') as f:
-            f.write(driver.page_source)
+#         # Now we save the page content to a file
+#         with open(filename2, 'w', encoding='utf-8') as f:
+#             f.write(driver.page_source)
 
-    driver.quit()
+#     driver.quit()
 
 
 def fill_choices_skaters(choices: List[Choice], filename):
@@ -561,6 +565,8 @@ def fill_office_points_manually(participants: List[Participant], filename: str) 
                 break
 
 def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -> None:
+    console.print()
+    console.print("Downloading skaters and goalies stats from NHL web site...", style="yellow")
     for index, choice in enumerate(choices):
         if (choice.box_style == BoxStyle.TBS_SKATERS) or (choice.box_style == BoxStyle.TBS_GOALIE):
             sPlayerID = choice.nhl_id
@@ -569,20 +575,40 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                 # if "filename" already exists, we skip the download
                 # Let's check if the file exists
                 if not os.path.exists(filename):
-                    console.print(f"Downloading stats for skater player ID {sPlayerID} - {choice.name}...", style="yellow")
                     url = f"https://api-web.nhle.com/v1/player/{sPlayerID}/landing"
                     response = requests.get(url)
 
                     # Save raw text (JSON) to a file
                     with open(f"{filename}", "w", encoding="utf-8") as f:
                         f.write(response.text)
-                    console.print("Downloaded successfully!", style="bold green")
+                    # console.print(f"Downloaded stats for skater player ID {sPlayerID} - {choice.name}...", style="green")
+                    console.print('.', end='', style="green")
+
+                with open(f"{filename}", "r", encoding="utf-8") as f:
+                    data = json.load(f)
+
+                if choice.box_style == BoxStyle.TBS_SKATERS:
+                    choice.nb_assists = data["featuredStats"]["regularSeason"]["subSeason"]["assists"]
+                    choice.nb_goals = data["featuredStats"]["regularSeason"]["subSeason"]["goals"]
+                    choice.nb_points = choice.nb_assists + choice.nb_goals
+                    choice.found = True
+                    # console.print(f"Choice {choice.name} - Goals: {choice.nb_goals}, Assists: {choice.nb_assists}, Points: {choice.nb_points}", style="green")
+                elif choice.box_style == BoxStyle.TBS_GOALIE:
+                    choice.nb_wins = data["featuredStats"]["regularSeason"]["subSeason"]["wins"]
+                    choice.nb_points = choice.nb_wins * 2
+                    choice.found = True
+                    # console.print(f"Choice {choice.name} - Wins: {choice.nb_wins}, Points: {choice.nb_points}", style="green")
+
+    console.print()  # moves to next line
+    console.print("Finished downloading skaters and goalies stats from NHL web site!", style="bold green")
+
 
 def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> None:
     filename = f"{download_directory}\\teams_standing.json"
 
     # Let's check if the file exists
     if not os.path.exists(filename):
+        console.print()
         console.print(f"Downloading teams standings...", style="yellow")
         url = f"https://api-web.nhle.com/v1/standings/now"
         response = requests.get(url)
@@ -590,46 +616,86 @@ def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> 
         # Save raw text (JSON) to a file
         with open(f"{filename}", "w", encoding="utf-8") as f:
             f.write(response.text)
-
         console.print("Downloaded successfully!", style="bold green")
 
+    with open(f"{filename}", "r", encoding="utf-8") as f:
+        data = json.load(f)
 
-def get_choices_skaters_stats(choices: List[Choice], download_directory: str) -> None:
-    for i in range(7):
-        url = f"https://www.nhl.com/stats/skaters?reportType=season&seasonFrom=20252026&seasonTo=20252026&gameType=2&sort=points,goals,assists&page={i}&pageSize=100"
-        filename = f"{download_directory}\\skaters{i}.lst"
-        get_page_content(url, filename)
-        fill_choices_skaters(choices, filename)
+    console.print()
+    console.print("Parsing teams standings...", style="yellow")
+    for choice in choices:
+        if choice.box_style == BoxStyle.TBS_TEAM:
+            for team in data["standings"]:
+                if team["teamName"]["default"] == choice.name:
+                    choice.nb_wins = team["wins"]
+                    choice.nb_points = choice.nb_wins * 2
+                    choice.found = True
+                    # console.print(f"Choice {choice.name} - Wins: {choice.nb_wins}, Points: {choice.nb_points}", style="green")
+    console.print("Finished parsing teams standings!", style="bold green")
 
-
-def get_choices_goalies_stats(choices: List[Choice], download_directory: str) -> None:
-    url = f"https://www.nhl.com/stats/goalies?reportType=season&seasonFrom=20252026&seasonTo=20252026&gameType=2&sort=wins,savePct&page=0&pageSize=100"
-    filename = f"{download_directory}\\goalies.lst"
-    get_page_content(url, filename)
-    fill_choices_goalies(choices, filename)
-
-
-def get_choices_teams_stats(choices: List[Choice], download_directory: str) -> None:
-    # url = f"https://www.nhl.com/standings/2025-04-18/league"
-    url = f"https://www.nhl.com/stats/teams"
-    url = f"https://www.nhl.com/stats/teams?reportType=season&seasonFrom=20252026&seasonTo=20252026&gameType=2&sort=points,wins&page=0&pageSize=50"
-    filename = f"{download_directory}\\teams.lst"
-    get_page_content(url, filename)
-    fill_choices_teams(choices, filename)
+# def get_choices_skaters_stats(choices: List[Choice], download_directory: str) -> None:
+#     for i in range(7):
+#         url = f"https://www.nhl.com/stats/skaters?reportType=season&seasonFrom=20252026&seasonTo=20252026&gameType=2&sort=points,goals,assists&page={i}&pageSize=100"
+#         filename = f"{download_directory}\\skaters{i}.lst"
+#         get_page_content(url, filename)
+#         fill_choices_skaters(choices, filename)
 
 
-def get_officepools_points(participants: List[Participant], download_directory: str) -> None:
-    url1 = f"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026"
-    url2 = f"https://www.officepools.com/nhl/classic/404165/standings#/?page=2"
-    filename1 = f"{download_directory}\\officepools1.lst"
-    filename2 = f"{download_directory}\\officepools2.lst"
-    get_page_content(url1, filename1, url2, filename2)
-    fill_office_points(participants, filename1)
-    fill_office_points(participants, filename2)
+# def get_choices_goalies_stats(choices: List[Choice], download_directory: str) -> None:
+#     url = f"https://www.nhl.com/stats/goalies?reportType=season&seasonFrom=20252026&seasonTo=20252026&gameType=2&sort=wins,savePct&page=0&pageSize=100"
+#     filename = f"{download_directory}\\goalies.lst"
+#     get_page_content(url, filename)
+#     fill_choices_goalies(choices, filename)
+
+
+# def get_choices_teams_stats(choices: List[Choice], download_directory: str) -> None:
+#     # url = f"https://www.nhl.com/standings/2025-04-18/league"
+#     url = f"https://www.nhl.com/stats/teams"
+#     url = f"https://www.nhl.com/stats/teams?reportType=season&seasonFrom=20252026&seasonTo=20252026&gameType=2&sort=points,wins&page=0&pageSize=50"
+#     filename = f"{download_directory}\\teams.lst"
+#     get_page_content(url, filename)
+#     fill_choices_teams(choices, filename)
+
+
+# def get_officepools_points(participants: List[Participant], download_directory: str) -> None:
+#     url1 = f"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026"
+#     url2 = f"https://www.officepools.com/nhl/classic/404165/standings#/?page=2"
+#     filename1 = f"{download_directory}\\officepools1.lst"
+#     filename2 = f"{download_directory}\\officepools2.lst"
+#     get_page_content(url1, filename1, url2, filename2)
+#     fill_office_points(participants, filename1)
+#     fill_office_points(participants, filename2)
 
 def get_officepools_points_manually(participants: List[Participant], download_directory: str) -> None:
     filename = f"{download_directory}\\officepools_manual.lst"
     fill_office_points_manually(participants, filename)
+
+def get_officepools_points_from_excel_file(participants: List[Participant], excel_filename: str) -> None:
+    console.print()
+    console.print("Parsing Excel file for office pools points...", style="yellow")
+    df = pd.read_excel(excel_filename)
+
+    # Process in blocks of 20 rows
+    for start in range(0, len(df), 20):
+        block = df.iloc[start:start+20]
+        iTotalPoints = 0
+        iLowestValue = 1000000
+
+        for index,row in block.iterrows():
+            sParticipantName = row.iloc[0]   # Column A
+            iBoxPoints = row.iloc[10]  # Column K
+            iTotalPoints += int(iBoxPoints)
+            if int(iBoxPoints) < iLowestValue:
+                iLowestValue = int(iBoxPoints)
+
+        for participant in participants:
+            if participant.name == sParticipantName:
+                participant.office_total_points = (iTotalPoints - iLowestValue)
+                # console.print(f"Participant {participant.name} - Office Total Points: {participant.office_total_points}", style="green")
+                break
+    console.print("Finished parsing Excel file for office pools points!", style="bold green")
+
+    
 
 def validate_officepools_points(participants: List[Participant]) -> None:
     for participant in participants:
@@ -1740,14 +1806,15 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     offices = []
     init_offices(offices)
 
-    get_choices_skaters_stats(choices, download_directory)
-    get_choices_skaters_stats2(choices, download_directory)
-
-    get_choices_goalies_stats(choices, download_directory)
-    get_choices_teams_stats(choices, download_directory)
-    get_choices_teams_stats2(choices, download_directory)
+    # get_choices_skaters_stats(choices, download_directory)
+    # get_choices_goalies_stats(choices, download_directory)
+    # get_choices_teams_stats(choices, download_directory)
     # get_officepools_points(participants, download_directory)
-    get_officepools_points_manually(participants, download_directory)
+    # get_officepools_points_manually(participants, download_directory)
+
+    get_choices_skaters_stats2(choices, download_directory)
+    get_choices_teams_stats2(choices, download_directory)
+    get_officepools_points_from_excel_file(participants, r'c:\tmp\custom.xls')
 
     validate_choices(choices, participants)
     validate_officepools_points(participants)
@@ -1774,6 +1841,8 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
 
 
 if __name__ == "__main__":
+    freeze_start = time.perf_counter()   # high‑precision timer
+
     # Set the locale to French
     locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
@@ -1801,6 +1870,8 @@ if __name__ == "__main__":
 
     # Ask the user to press a key to exit
     console.print()
-    console.print("Processing completed. Press Enter to exit...", style="blue")
-    input()
-    
+
+    freeze_end = time.perf_counter()
+
+    elapsed_ms = (freeze_end - freeze_start) * 1000
+    print(f"Elapsed: {elapsed_ms:.2f} ms")
