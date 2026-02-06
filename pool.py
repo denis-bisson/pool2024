@@ -205,7 +205,7 @@ def init_choices(choices: list):
     choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8478483", "Mitch Marner", "VGK", 0, 0, 0, 0))
 
     choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8480018", "Nick Suzuki", "MTL", 0, 0, 0, 0))
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8478550", "Artemi Panarin", "NYR", 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8478550", "Artemi Panarin", "LAK", 0, 0, 0, 0))
     choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8477956", "David Pastrnak", "BOS", 0, 0, 0, 0))
     choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8477939", "William Nylander", "TOR", 0, 0, 0, 0))
     choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8479407", "Jesper Bratt", "NJD", 0, 0, 0, 0))
