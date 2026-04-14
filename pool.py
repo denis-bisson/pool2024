@@ -17,6 +17,9 @@ import locale
 import requests
 import json
 import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.dates
+import matplotlib.ticker
 
 
 console = Console(highlight=False)
@@ -93,6 +96,7 @@ class Choice:
         self.nb_assists = nb_assists
         self.nb_points = nb_points
         self.nb_wins = nb_wins
+        self.day_by_day_stats = []
         self.who_chose = []        
 
 
@@ -110,7 +114,8 @@ class Participant:
         self.sex_type = param_sex
         self.country = param_country
         self.office = param_office
-
+        self.day_by_day_points = []
+        self.rank_day_by_day = []
 
 class Box:
     def __init__(self, name):
@@ -564,6 +569,147 @@ def fill_office_points_manually(participants: List[Participant], filename: str) 
                 participant.office_total_points = int(points)
                 break
 
+def extract_daily_goals_assists(json_path):
+    # Load JSON
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Extract game log into a DataFrame
+    df = pd.DataFrame(data["gameLog"])
+
+    # Convert gameDate to datetime
+    df["gameDate"] = pd.to_datetime(df["gameDate"])
+
+    # Keep only the columns we need
+    df = df[["gameDate", "goals", "assists"]]
+
+    # Build the full date range
+    start_date = pd.to_datetime("2025-10-06")
+    end_date = pd.to_datetime(datetime.datetime.now().date())
+    all_days = pd.date_range(start=start_date, end=end_date, freq="D")
+
+    # Reindex so every day exists; missing days become NaN
+    df = df.set_index("gameDate").reindex(all_days)
+
+    # Replace NaN with zeros
+    df = df.fillna(0).astype(int)
+
+    # Convert to list of tuples
+    result = list(df[["goals", "assists"]].itertuples(index=False, name=None))
+
+    return result
+
+def extract_daily_wins_losses(json_path):
+    # Load JSON
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    # Extract game log into DataFrame
+    df = pd.DataFrame(data["gameLog"])
+
+    # Convert gameDate to datetime
+    df["gameDate"] = pd.to_datetime(df["gameDate"])
+
+    # Keep only date + decision
+    df = df[["gameDate", "decision"]]
+
+    # Create numeric W/L columns
+    df["W"] = (df["decision"] == "W").astype(int)
+    df["L"] = (df["decision"] == "L").astype(int)
+
+    # Remove the non-numeric column
+    df = df.drop(columns=["decision"])
+
+    # Build full date range
+    start_date = pd.to_datetime("2025-10-06")
+    end_date = pd.to_datetime(datetime.datetime.now().date())
+    all_days = pd.date_range(start=start_date, end=end_date, freq="D")
+
+    # Reindex so every day exists
+    df = df.set_index("gameDate").reindex(all_days)
+
+    # Fill missing days with zeros
+    df = df.fillna(0).astype(int)
+
+    # Convert to list of tuples (W, L)
+    result = list(df[["W", "L"]].itertuples(index=False, name=None))
+
+    return result
+
+def extract_daily_team_results(json_path, team_abbrev):
+    # Load JSON
+    with open(json_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    games = data["games"]
+    df = pd.DataFrame(games)
+
+    df["gameDate"] = pd.to_datetime(df["gameDate"])
+
+    # Determine if team is home or away
+    df["is_home"] = df["homeTeam"].apply(lambda t: t["abbrev"] == team_abbrev)
+    df["is_away"] = df["awayTeam"].apply(lambda t: t["abbrev"] == team_abbrev)
+
+    # Safe score extraction
+    def safe_score(team_dict):
+        return team_dict.get("score", 0)
+
+    def get_team_score(row):
+        return safe_score(row["homeTeam"]) if row["is_home"] else safe_score(row["awayTeam"])
+
+    def get_opponent_score(row):
+        return safe_score(row["awayTeam"]) if row["is_home"] else safe_score(row["homeTeam"])
+
+    df["team_score"] = df.apply(get_team_score, axis=1)
+    df["opp_score"] = df.apply(get_opponent_score, axis=1)
+
+    # Win = 1 if team_score > opp_score
+    df["W"] = (df["team_score"] > df["opp_score"]).astype(int)
+
+    # --- FIX: aggregate duplicate dates ---
+    df = df.groupby("gameDate").agg({
+        "W": "max",
+        "team_score": "sum"
+    })
+
+    # Build full date range
+    start_date = pd.to_datetime("2025-10-06")
+    end_date = pd.to_datetime(datetime.datetime.now().date())
+    all_days = pd.date_range(start=start_date, end=end_date, freq="D")
+
+    # Reindex to full daily timeline
+    df = df.reindex(all_days)
+
+    # Fill missing days with zeros
+    df = df.fillna(0).astype(int)
+
+    # Convert to list of tuples (W, score)
+    return list(df[["W", "team_score"]].itertuples(index=False, name=None))
+
+def get_choices_individual_teams_stats2(choices: List[Choice], download_directory: str) -> None:
+    console.print()
+    console.print("Downloading individual teams stats from NHL web site...", style="yellow")
+    for index, choice in enumerate(choices):
+        if choice.box_style == BoxStyle.TBS_TEAM:
+            sTeamdID = choice.team_abreviation
+            if sTeamdID != "":
+                filename = f"{download_directory}\\choice_{index}_daybyday.json"
+                # if "filename" already exists, we skip the download
+                # Let's check if the file exists
+                if not os.path.exists(filename):
+                    #url = f"https://api-web.nhle.com/v1/scoreboard/{sTeamdID}/now"
+                    url = f"https://api-web.nhle.com/v1/club-schedule-season/{sTeamdID}/now"
+                    response = requests.get(url)
+
+                    # Save raw text (JSON) to a file
+                    with open(f"{filename}", "w", encoding="utf-8") as f:
+                        f.write(response.text)
+                    # console.print(f"Downloaded day by day stats for team {choice.name}...", style="green")
+                    console.print('.', end='', style="green")
+
+                choice.day_by_day_stats = extract_daily_team_results(filename, sTeamdID)
+                choice.found = True
+
 def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -> None:
     console.print()
     console.print("Downloading skaters and goalies stats from NHL web site...", style="yellow")
@@ -584,6 +730,18 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                     # console.print(f"Downloaded stats for skater player ID {sPlayerID} - {choice.name}...", style="green")
                     console.print('.', end='', style="green")
 
+                filename_daybyday = f"{download_directory}\\choice_{index}_daybyday.json"
+                # if "filename_daybyday" already exists, we skip the download
+                if not os.path.exists(filename_daybyday):
+                    url_daybyday = f"https://api-web.nhle.com/v1/player/{sPlayerID}/game-log/20252026/2"
+                    response_daybyday = requests.get(url_daybyday)
+
+                    # Save raw text (JSON) to a file
+                    with open(f"{filename_daybyday}", "w", encoding="utf-8") as f:
+                        f.write(response_daybyday.text)
+                    # console.print(f"Downloaded day by day stats for skater player ID {sPlayerID} - {choice.name}...", style="green")
+                    console.print('.', end='', style="green")
+
                 with open(f"{filename}", "r", encoding="utf-8") as f:
                     data = json.load(f)
 
@@ -591,11 +749,13 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                     choice.nb_assists = data["featuredStats"]["regularSeason"]["subSeason"]["assists"]
                     choice.nb_goals = data["featuredStats"]["regularSeason"]["subSeason"]["goals"]
                     choice.nb_points = choice.nb_assists + choice.nb_goals
+                    choice.day_by_day_stats = extract_daily_goals_assists(filename_daybyday)
                     choice.found = True
                     # console.print(f"Choice {choice.name} - Goals: {choice.nb_goals}, Assists: {choice.nb_assists}, Points: {choice.nb_points}", style="green")
                 elif choice.box_style == BoxStyle.TBS_GOALIE:
                     choice.nb_wins = data["featuredStats"]["regularSeason"]["subSeason"]["wins"]
                     choice.nb_points = choice.nb_wins * 2
+                    choice.day_by_day_stats = extract_daily_wins_losses(filename_daybyday)
                     choice.found = True
                     # console.print(f"Choice {choice.name} - Wins: {choice.nb_wins}, Points: {choice.nb_points}", style="green")
 
@@ -738,6 +898,47 @@ def set_lowest_round(participants: List[Participant], choices: List[Choice]) -> 
         participant.lowest_round = lowest_round
 
 
+def set_points_per_day(participants: List[Participant], choices: List[Choice]) -> None:
+    for participant in participants:
+        cumulative_points = []
+        for box_number in range(len(participant.choices)):
+            cumulative_points.append(0)
+
+        for day_number in range(len(choices[participant.choices[0]].day_by_day_stats)):
+            participant.day_by_day_points.append(0)
+
+            for box_number, choice_index in enumerate(participant.choices):
+                if choices[choice_index].box_style == BoxStyle.TBS_SKATERS:
+                    iDailyPoints = (choices[choice_index].day_by_day_stats[day_number][0] + choices[choice_index].day_by_day_stats[day_number][1])
+                elif choices[choice_index].box_style == BoxStyle.TBS_GOALIE:
+                    iDailyPoints = (choices[choice_index].day_by_day_stats[day_number][0] * 2)
+                elif choices[choice_index].box_style == BoxStyle.TBS_TEAM:
+                    iDailyPoints= (choices[choice_index].day_by_day_stats[day_number][0] * 2)
+
+                cumulative_points[box_number] += iDailyPoints
+
+            min_index = 0
+            min_value = cumulative_points[0]
+
+            for box_number in range(1, len(cumulative_points)):
+                if cumulative_points[box_number] < min_value:
+                    min_value = cumulative_points[box_number]
+                    min_index = box_number
+
+            # We assume you already computed this:
+            # min_index = index of smallest element
+            total_except_min = 0
+
+            for box_number in range(len(cumulative_points)):
+                if box_number != min_index:
+                    total_except_min += cumulative_points[box_number]
+
+            participant.day_by_day_points[day_number] = total_except_min
+
+        # print(f"Participant: {participant.name} - Points per day: {participant.day_by_day_points}")
+        # print(f"cumulative_points: {cumulative_points}")
+
+
 def set_total_points(participants: List[Participant], choices: List[Choice]) -> None:
     for participant in participants:
         participant.total_points = 0
@@ -766,6 +967,33 @@ def sort_participants(participants: List[Participant]) -> None:
             iPreviousTotalPoints = participant.total_points
         participant.rank = iRank
 
+def sort_participants_day_by_day(participants: List[Participant]) -> None:
+    if len(participants) == 0:
+        return
+
+    # Loop through each index of the list
+    for i in range(len(participants[0].day_by_day_points)):
+
+        # Sort participants based on the i-th element of their list
+        sorted_participants = sorted(
+            participants,
+            key=lambda p: p.day_by_day_points[i],
+            reverse=True
+        )
+
+        iPreviousTotalPoints = -1
+        participant_index = 0
+        iRank = -1
+
+        for participant_index, participant in enumerate(sorted_participants):
+            if participant.day_by_day_points[i] != iPreviousTotalPoints:
+                iRank = participant_index + 1
+                iPreviousTotalPoints = participant.day_by_day_points[i]
+            participant.rank_day_by_day.append(iRank)
+
+    # For each participant, print the list of their ranks day by day
+    # for participant in participants:
+    #     print(f"Participant: {participant.name} - Ranks day by day: {participant.rank_day_by_day}")
 
 def ordinal(n):
     if 10 <= n % 100 <= 20:
@@ -773,6 +1001,75 @@ def ordinal(n):
     else:
         suffix = {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th')
     return str(n) + suffix
+
+
+def plot_rankings_over_time(participants, output_path):
+    if not participants:
+        return
+
+    sorted_participants = sorted(participants, key=lambda x: x.total_points, reverse=True)
+
+    num_days = len(sorted_participants[0].rank_day_by_day)
+    start_date = datetime.datetime(2025, 10, 6)
+    x_values = [start_date + datetime.timedelta(days=i) for i in range(num_days)]
+
+    for target in sorted_participants:
+
+        plt.figure(figsize=(16, 9), dpi=100)
+
+        for p in sorted_participants:
+            if len(p.rank_day_by_day) != num_days:
+                continue
+
+            # Legend label now includes rank
+            legend_label = f"{p.name} ({p.rank})"
+
+            if p is target:
+                plt.plot(
+                    x_values,
+                    p.rank_day_by_day,
+                    linewidth=3.0,
+                    alpha=1.0,
+                    label=legend_label
+                )
+            else:
+                plt.plot(
+                    x_values,
+                    p.rank_day_by_day,
+                    linewidth=1.0,
+                    alpha=0.3,
+                    label=legend_label
+                )
+
+        plt.gca().xaxis.set_major_formatter(matplotlib.dates.DateFormatter('%Y-%m-%d'))
+        plt.gca().xaxis.set_major_locator(matplotlib.ticker.LinearLocator(numticks=12))
+        plt.gcf().autofmt_xdate()
+        plt.xlim(x_values[0], x_values[-1])
+
+        plt.gca().invert_yaxis()
+        plt.yticks([1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 52])
+
+        plt.xlabel("Date")
+        plt.ylabel("Rang / Rank")
+        plt.title(
+            f"Rang à travers le temps / Ranking Over Time — "
+            f"{target.name} {ordinal(target.rank)} avec/with {target.total_points} points"
+        )
+        plt.grid(True, linestyle="--", alpha=0.3)
+
+        plt.legend(
+            loc="upper center",
+            bbox_to_anchor=(0.5, -0.12),
+            ncol=8,
+            fontsize=8
+        )
+
+        plt.tight_layout()
+
+        filename = f"rankings_{target.native_index}.png"
+        output_filename = os.path.join(output_path, filename)
+        plt.savefig(output_filename)
+        plt.close()
 
 
 def set_best_and_worse_choices_per_boxes(boxes: List[Box], choices: List[Choice]) -> None:
@@ -1531,7 +1828,7 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
 
     # Let's sort based on the average points
     sorted_office_participant = []
-    sorted_office_participant = sorted(offices, key=lambda x: x.average_points, reverse=True)
+    sorted_office_participant = sorted(offices, key=lambda x: float(x.average_points),reverse=True)
 
     iPreviousTotalPoints = -1
     office_participant_index = 0
@@ -1814,6 +2111,7 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
 
     get_choices_skaters_stats2(choices, download_directory)
     get_choices_teams_stats2(choices, download_directory)
+    get_choices_individual_teams_stats2(choices, download_directory)
     get_officepools_points_from_excel_file(participants, r'c:\Users\DBisson\Downloads\custom.xls')
 
     validate_choices(choices, participants)
@@ -1822,12 +2120,15 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     set_best_and_worse_choices_per_boxes(boxes, choices)
     set_lowest_round(participants, choices)
     set_total_points(participants, choices)
+    set_points_per_day(participants, choices)
     set_who_chose_who(participants, choices)
     sort_participants(participants)
+    sort_participants_day_by_day(participants)
 
     if flag_compare_nhl_vs_officepools == True:
         compare_nhl_vs_officepools(participants)
 
+    plot_rankings_over_time(participants, for_website_directory)
     copy_required_ressources(for_website_directory, offices, countries)
     procedure_css_file(for_website_directory)
     produce_personal_grid(report_datetime, for_website_directory, boxes, choices, participants)
@@ -1847,7 +2148,7 @@ if __name__ == "__main__":
     locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
     console.print('----------------------------------', style='bold green')
-    console.print('BLUBERI POOL GENERATOR - ver 1.0.1', style='bold green')
+    console.print('BLUBERI POOL GENERATOR - ver 1.1.0', style='bold green')
     console.print('----------------------------------', style='bold green')
     console.print()
     console.print(f'Number of argument:{len(sys.argv)}', style='yellow')
