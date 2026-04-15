@@ -2063,6 +2063,13 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                 f.write("      </tr>\n")
             f.write("    </table>\n")
 
+            f.write("<BR>\n")
+
+            # Now, add the personal graphic image showing the ranking over time for this participant.
+            # It's an image. The image is generated in the plot_rankings_over_time function and is named personal_ranking_{iParticipantIndex}.png
+            sub_path = ""
+            f.write(f"<img src=\"{sub_path}rankings_{iParticipantIndex}.png\" alt=\"Ranking over time for {participant.name}\" class=\"personal-ranking-image\">\n")
+
             write_footer(generation_timestamp, f)
 
             f.write("  </body>\n")
