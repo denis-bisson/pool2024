@@ -7,6 +7,8 @@ import os
 import time
 # import bs4
 import itertools
+import re
+import html
 from enum import Enum
 from typing import List
 import datetime
@@ -17,6 +19,7 @@ import shutil
 import locale
 import requests
 import json
+import csv
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates
@@ -24,7 +27,10 @@ import matplotlib.ticker
 
 
 console = Console(highlight=False)
-gExternalPath = 'https://global6.com/bluberipool/20252026/'
+gExternalPath = 'https://global6.com/bluberipool/20262027/'
+gFlagSelectionGrid = False
+gPlotOfRankingOverTime = False
+gProcessChoixesFromTmp = False
 
 # https://github.com/Zmalski/NHL-API-Reference?tab=readme-ov-file#get-specific-player-info
 
@@ -101,6 +107,8 @@ class Choice:
         self.nb_wins = nb_wins
         self.day_by_day_stats = []
         self.who_chose = []        
+        self.player_full_name = ""
+        self.injury_comment = ""
 
 
 class Participant:
@@ -202,46 +210,46 @@ def init_choices(choices: list):
     choices.append(Choice(3, BoxStyle.TBS_TEAM, "0000000", "Winnipeg Jets", "WPG", 0, 0, 0, 0, 0))
 
     choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8484801", "Macklin Celebrini", "SJS", 0, 0, 0, 0, 0))
+    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8477934", "Leon Draisaitl", "EDM", 0, 0, 0, 0, 0))
     choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8476453", "Nikita Kucherov", "TBL", 0, 0, 0, 0, 0))
     choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8477492", "Nathan MacKinnon", "COL", 0, 0, 0, 0, 0))
     choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8478402", "Connor McDavid", "EDM", 0, 0, 0, 0, 0))
     choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8477956", "David Pastrnak", "BOS", 0, 0, 0, 0, 0))
-    choices.append(Choice(4, BoxStyle.TBS_SKATERS, "8476460", "Mark Scheifele", "WPG", 0, 0, 0, 0, 0))
 
     choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8481540", "Cole Caufield", "MTL", 0, 0, 0, 0, 0))
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8477934", "Leon Draisaitl", "EDM", 0, 0, 0, 0, 0))
     choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8478403", "Jack Eichel", "VGK", 0, 0, 0, 0, 0))
     choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8480039", "Martin Necas", "COL", 0, 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8480027", "Jason Robertson", "DAL", 0, 0, 0, 0, 0))
+    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8476460", "Mark Scheifele", "WPG", 0, 0, 0, 0, 0))
     choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8480018", "Nick Suzuki", "MTL", 0, 0, 0, 0, 0))
-    choices.append(Choice(5, BoxStyle.TBS_SKATERS, "8479314", "Matthew Tkachuk", "FLA", 0, 0, 0, 0, 0))
 
     choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8478398", "Kyle Connor", "WPG", 0, 0, 0, 0, 0))
+    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8477404", "Jake Guentzel", "TBL", 0, 0, 0, 0, 0))
     choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8478864", "Kirill Kaprizov", "MIN", 0, 0, 0, 0, 0))
     choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8479343", "Clayton Keller", "UTA", 0, 0, 0, 0, 0))
     choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8478483", "Mitch Marner", "VGK", 0, 0, 0, 0, 0))
     choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8479318", "Auston Matthews", "TOR", 0, 0, 0, 0, 0))
-    choices.append(Choice(6, BoxStyle.TBS_SKATERS, "8480027", "Jason Robertson", "DAL", 0, 0, 0, 0, 0))
 
     choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8481557", "Matt Boldy", "MIN", 0, 0, 0, 0, 0))
-    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8479337", "Alex DeBrincat, A", "DET", 0, 0, 0, 0, 0))
-    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8477404", "Jake Guentzel", "TBL", 0, 0, 0, 0, 0))
+    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8479337", "Alex DeBrincat", "DET", 0, 0, 0, 0, 0))
+    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8482740", "Wyatt Johnston", "DAL", 0, 0, 0, 0, 0))
     choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8477939", "William Nylander", "TOR", 0, 0, 0, 0, 0))
     choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8478550", "Artemi Panarin", "LAK", 0, 0, 0, 0, 0))
-    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8482078", "Lucas Raymond", "DET", 0, 0, 0, 0, 0))
+    choices.append(Choice(7, BoxStyle.TBS_SKATERS, "8479314", "Matthew Tkachuk", "FLA", 0, 0, 0, 0, 0))
 
     choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8478427", "Sebastian Aho", "CAR", 0, 0, 0, 0, 0))
-    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8484144", "Connor Bedard", "CHI", 0, 0, 0, 0, 0))
-    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8481559", "Jack Hughes", "(NJ)", 0, 0, 0, 0, 0))
-    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8482740", "Wyatt Johnston", "DAL", 0, 0, 0, 0, 0))
+    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8481559", "Jack Hughes", "NJD", 0, 0, 0, 0, 0))
     choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8478420", "Mikko Rantanen", "DAL", 0, 0, 0, 0, 0))
+    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8482078", "Lucas Raymond", "DET", 0, 0, 0, 0, 0))
     choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8482116", "Tim Stützle", "OTT", 0, 0, 0, 0, 0))
+    choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8479420", "Tage Thompson", "BUF", 0, 0, 0, 0, 0))
 
     choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8471675", "Sidney Crosby", "PIT", 0, 0, 0, 0, 0))
     choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8477940", "Nikolaj Ehlers", "CAR", 0, 0, 0, 0, 0))
     choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8476887", "Filip Forsberg", "NSH", 0, 0, 0, 0, 0))
     choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8479542", "Brandon Hagel", "TBL", 0, 0, 0, 0, 0))
     choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8475158", "Ryan O'Reilly", "NSH", 0, 0, 0, 0, 0))
-    choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8479420", "Tage Thompson", "BUF", 0, 0, 0, 0, 0))
+    choices.append(Choice(9, BoxStyle.TBS_SKATERS, "8480801", "Brady Tkachuk", "FLA", 0, 0, 0, 0, 0))
 
     choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8479407", "Jesper Bratt", "NJD", 0, 0, 0, 0, 0))
     choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8484153", "Leo Carlsson", "ANA", 0, 0, 0, 0, 0))
@@ -260,58 +268,58 @@ def init_choices(choices: list):
     choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8479987", "Morgan Geekie", "BOS", 0, 0, 0, 0, 0))
     choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8477933", "Sam Reinhart", "FLA", 0, 0, 0, 0, 0))
     choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8475810", "Bryan Rust", "PIT", 0, 0, 0, 0, 0))
-    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8480801", "Brady Tkachuk", "OTT", 0, 0, 0, 0, 0))
+    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8482699", "Dylan Guenther", "UTA", 0, 0, 0, 0, 0))
     choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8480023", "Robert Thomas", "STL", 0, 0, 0, 0, 0))
-    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8477949", "Alex Tuch", "BUF", 0, 0, 0, 0, 0))
+    choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8477949", "Alex Tuch", "WSH", 0, 0, 0, 0, 0))
 
+    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8483445", "Cutter Gauthier", "ANA", 0, 0, 0, 0, 0))
     choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8482093", "Seth Jarvis", "CAR", 0, 0, 0, 0, 0))
     choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8478439", "Travis Konecny", "PHI", 0, 0, 0, 0, 0))
-    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8480893", "Kirill Marchenko", "CBJ", 0, 0, 0, 0, 0))
-    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8475166", "John Tavares", "TOR", 0, 0, 0, 0, 0))
+    choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8480893", "Kirill Marchenko", "TOR", 0, 0, 0, 0, 0))
     choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8480014", "Gabriel Vilardi", "WPG", 0, 0, 0, 0, 0))
     choices.append(Choice(13, BoxStyle.TBS_SKATERS, "8481533", "Trevor Zegras", "PHI", 0, 0, 0, 0, 0))
 
     choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8478463", "Anthony Beauvillier", "WSH", 0, 0, 0, 0, 0))
     choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8480865", "Noah Dobson", "MTL", 0, 0, 0, 0, 0))
     choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8476456", "Jonathan Huberdeau", "CGY", 0, 0, 0, 0, 0))
-    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8482109", "Alexis Lafreniere", "NYR", 0, 0, 0, 0, 0))
-    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8477511", "Anthony Mantha", "NJ", 0, 0, 0, 0, 0))
+    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8482109", "Alexis Lafrenière", "NYR", 0, 0, 0, 0, 0))
+    choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8477511", "Anthony Mantha", "NJD", 0, 0, 0, 0, 0))
     choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8476539", "Jonathan Marchessault", "NSH", 0, 0, 0, 0, 0))
 
     choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8477964", "Ivan Barbashev", "VGK", 0, 0, 0, 0, 0))
     choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8484984", "Ivan Demidov", "MTL", 0, 0, 0, 0, 0))
     choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8476881", "Tomas Hertl", "VGK", 0, 0, 0, 0, 0))
-    choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8482775", "Olli Kapanen", "MTL", 0, 0, 0, 0, 0))
+    choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8482775", "Oliver Kapanen", "MTL", 0, 0, 0, 0, 0))
     choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8483515", "Juraj Slafkovský", "MTL", 0, 0, 0, 0, 0))
     choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8477447", "Shea Theodore", "VGK", 0, 0, 0, 0, 0))
 
     choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8481523", "Kirby Dach", "MTL", 0, 0, 0, 0, 0))
     choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8476455", "Gabriel Landeskog", "COL", 0, 0, 0, 0, 0))
     choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8471724", "Kris Letang", "PIT", 0, 0, 0, 0, 0))
-    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8480064", "Rasmus Norris", "BUF", 0, 0, 0, 0, 0))
+    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8480064", "Josh Norris", "BUF", 0, 0, 0, 0, 0))
     choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8476454", "Ryan Nugent-Hopkins", "EDM", 0, 0, 0, 0, 0))
     choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8475913", "Mark Stone", "VGK", 0, 0, 0, 0, 0))
 
     choices.append(Choice(17, BoxStyle.TBS_SKATERS, "8474141", "Patrick Kane", "CHI", 0, 0, 0, 0, 0))
     choices.append(Choice(17, BoxStyle.TBS_SKATERS, "8471215", "Evgeni Malkin", "PIT", 0, 0, 0, 0, 0))
-    choices.append(Choice(17, BoxStyle.TBS_SKATERS, "8473419", "Brad Marchand", "FLA", 0, 0, 0, 0, 0))
     choices.append(Choice(17, BoxStyle.TBS_SKATERS, "8475754", "Brock Nelson", "COL", 0, 0, 0, 0, 0))
     choices.append(Choice(17, BoxStyle.TBS_SKATERS, "8471214", "Alex Ovechkin", "WSH", 0, 0, 0, 0, 0))
     choices.append(Choice(17, BoxStyle.TBS_SKATERS, "8474564", "Steven Stamkos", "NSH", 0, 0, 0, 0, 0))
+    choices.append(Choice(17, BoxStyle.TBS_SKATERS, "8475166", "John Tavares", "TOR", 0, 0, 0, 0, 0))
 
     choices.append(Choice(18, BoxStyle.TBS_SKATERS, "8480803", "Evan Bouchard", "EDM", 0, 0, 0, 0, 0))
     choices.append(Choice(18, BoxStyle.TBS_SKATERS, "8480839", "Rasmus Dahlin", "BUF", 0, 0, 0, 0, 0))
     choices.append(Choice(18, BoxStyle.TBS_SKATERS, "8480800", "Quinn Hughes", "MIN", 0, 0, 0, 0, 0))
+    choices.append(Choice(18, BoxStyle.TBS_SKATERS, "8483457", "Lane Hutson", "MTL", 0, 0, 0, 0, 0))
     choices.append(Choice(18, BoxStyle.TBS_SKATERS, "8480069", "Cale Makar", "COL", 0, 0, 0, 0, 0))
-    choices.append(Choice(18, BoxStyle.TBS_SKATERS, "8478178", "Dylan Raddysh", "TOR", 0, 0, 0, 0, 0))
     choices.append(Choice(18, BoxStyle.TBS_SKATERS, "8478460", "Zach Werenski", "CBJ", 0, 0, 0, 0, 0))
 
-    choices.append(Choice(19, BoxStyle.TBS_SKATERS, "8474590", "Brent Carlson", "TB", 0, 0, 0, 0, 0))
+    choices.append(Choice(19, BoxStyle.TBS_SKATERS, "8474590", "John Carlson", "TBL", 0, 0, 0, 0, 0))
     choices.append(Choice(19, BoxStyle.TBS_SKATERS, "8479323", "Adam Fox", "NYR", 0, 0, 0, 0, 0))
     choices.append(Choice(19, BoxStyle.TBS_SKATERS, "8476906", "Shayne Gostisbehere", "CAR", 0, 0, 0, 0, 0))
-    choices.append(Choice(19, BoxStyle.TBS_SKATERS, "8483457", "Lane Hutson", "MTL", 0, 0, 0, 0, 0))
     choices.append(Choice(19, BoxStyle.TBS_SKATERS, "8474578", "Erik Karlsson", "PIT", 0, 0, 0, 0, 0))
-    choices.append(Choice(19, BoxStyle.TBS_SKATERS, "8479325", "Charlie McAvoy", "BOS", 0, 0, 0, 0, 0))
+    choices.append(Choice(19, BoxStyle.TBS_SKATERS, "8485366", "Matthew Schaefer", "NYI", 0, 0, 0, 0, 0))
+    choices.append(Choice(19, BoxStyle.TBS_SKATERS, "8478178", "Darren Raddysh", "TOR", 0, 0, 0, 0, 0))
 
     choices.append(Choice(20, BoxStyle.TBS_SKATERS, "8479345", "Jakob Chychrun", "WSH", 0, 0, 0, 0, 0))
     choices.append(Choice(20, BoxStyle.TBS_SKATERS, "8480036", "Miro Heiskanen", "DAL", 0, 0, 0, 0, 0))
@@ -320,27 +328,28 @@ def init_choices(choices: list):
     choices.append(Choice(20, BoxStyle.TBS_SKATERS, "8481542", "Moritz Seider", "DET", 0, 0, 0, 0, 0))
     choices.append(Choice(20, BoxStyle.TBS_SKATERS, "8479410", "Mikhail Sergachev", "UTA", 0, 0, 0, 0, 0))
 
-    choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8483548", "Brady Bussi", "CAR", 0, 0, 0, 0, 0))
-    choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8480045", "Ukko Luukkonen", "BUF", 0, 0, 0, 0, 0))
-    choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8474593", "Jacob Markstrom", "NJD", 0, 0, 0, 0, 0))
+    choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8478406", "Mackenzie Blackwood", "COL", 0, 0, 0, 0, 0))
+    choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8483548", "Brandon Bussi", "CAR", 0, 0, 0, 0, 0))
+    choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8480045", "Ukko-Pekka Luukkonen", "BUF", 0, 0, 0, 0, 0))
+    choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8474593", "Jacob Markstrom", "FLA", 0, 0, 0, 0, 0))
     choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8479979", "Jake Oettinger", "DAL", 0, 0, 0, 0, 0))
     choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8476883", "Andrei Vasilevskiy", "TBL", 0, 0, 0, 0, 0))
-    choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8475809", "Spencer Wedgewood", "COL", 0, 0, 0, 0, 0))
 
-    choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8478406", "Michael Blackwood", "COL", 0, 0, 0, 0, 0))
-    choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8479406", "Filip Gustavsson", "MIN", 0, 0, 0, 0, 0))
     choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8476945", "Connor Hellebuyck", "WPG", 0, 0, 0, 0, 0))
-    choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8480981", "Joseph Hofer", "STL", 0, 0, 0, 0, 0))
+    choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8480981", "Joel Hofer", "STL", 0, 0, 0, 0, 0))
     choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8478009", "Ilya Sorokin", "NYI", 0, 0, 0, 0, 0))
     choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8476999", "Linus Ullmark", "OTT", 0, 0, 0, 0, 0))
+    choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8475809", "Scott Wedgewood", "COL", 0, 0, 0, 0, 0))
+    choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8482661", "Jesper Wallstedt", "MIN", 0, 0, 0, 0, 0))
 
-    choices.append(Choice(23, BoxStyle.TBS_GOALIE, "8475683", "Sergei Bobrovsky", "FLA", 0, 0, 0, 0, 0))
-    choices.append(Choice(23, BoxStyle.TBS_GOALIE, "8482487", "Jake Dobes", "MTL", 0, 0, 0, 0, 0))
+    choices.append(Choice(23, BoxStyle.TBS_GOALIE, "8475683", "Sergei Bobrovsky", "TOR", 0, 0, 0, 0, 0))
+    choices.append(Choice(23, BoxStyle.TBS_GOALIE, "8482487", "Jakub Dobes", "MTL", 0, 0, 0, 0, 0))
     choices.append(Choice(23, BoxStyle.TBS_GOALIE, "8477465", "Tristan Jarry", "EDM", 0, 0, 0, 0, 0))
     choices.append(Choice(23, BoxStyle.TBS_GOALIE, "8480280", "Jeremy Swayman", "BOS", 0, 0, 0, 0, 0))
     choices.append(Choice(23, BoxStyle.TBS_GOALIE, "8480313", "Logan Thompson", "WSH", 0, 0, 0, 0, 0))
     choices.append(Choice(23, BoxStyle.TBS_GOALIE, "8478872", "Karel Vejmelka", "UTA", 0, 0, 0, 0, 0))
 
+    # choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8484144", "Connor Bedard", "CHI", 0, 0, 0, 0, 0))
     # choices.append(Choice(8, BoxStyle.TBS_SKATERS, "8478010", "Brayden Point", "TBL", 0, 0, 0, 0, 0))
     # choices.append(Choice(11, BoxStyle.TBS_SKATERS, "8478440", "Dylan Strome", "WSH", 0, 0, 0, 0, 0))
     # choices.append(Choice(12, BoxStyle.TBS_SKATERS, "8480002", "Nico Hischier", "NJD", 0, 0, 0, 0, 0))
@@ -349,6 +358,8 @@ def init_choices(choices: list):
     # choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8480012", "Elias Pettersson", "VAN", 0, 0, 0, 0, 0))
     # choices.append(Choice(14, BoxStyle.TBS_SKATERS, "8478449", "Roope Hintz", "DAL", 0, 0, 0, 0, 0))
     # choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8479385", "Jordan Kyrou", "STL", 0, 0, 0, 0, 0))
+    # choices.append(Choice(17, BoxStyle.TBS_SKATERS, "8473419", "Brad Marchand", "FLA", 0, 0, 0, 0, 0))
+    # choices.append(Choice(19, BoxStyle.TBS_SKATERS, "8479325", "Charlie McAvoy", "BOS", 0, 0, 0, 0, 0))
     # choices.append(Choice(17, BoxStyle.TBS_GOALIE, "8478499", "Adin Hill", "VGK", 0, 0, 0, 0, 0))
     # choices.append(Choice(17, BoxStyle.TBS_GOALIE, "8478048", "Igor Shesterkin", "NYR", 0, 0, 0, 0, 0))
     # choices.append(Choice(18, BoxStyle.TBS_GOALIE, "8479973", "Stuart Skinner", "EDM", 0, 0, 0, 0, 0))
@@ -356,6 +367,80 @@ def init_choices(choices: list):
     # choices.append(Choice(18, BoxStyle.TBS_GOALIE, "8481692", "Dustin Wolf", "CGY", 0, 0, 0, 0, 0))
     # choices.append(Choice(19, BoxStyle.TBS_GOALIE, "8475311", "Darcy Kuemper", "LAK", 0, 0, 0, 0, 0))
     # choices.append(Choice(19, BoxStyle.TBS_GOALIE, "8478470", "Samuel Montembeault", "MTL", 0, 0, 0, 0, 0))
+    # choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8479406", "Filip Gustavsson", "MIN", 0, 0, 0, 0, 0))
+
+def process_choice_files(choices: List[Choice], folder_path: str) -> None:
+
+    """
+    Scans a folder for .txt files, checks each line against a choices list,
+    and prints the filename along with the 0-based match indices (or -1).
+    """
+    if not os.path.isdir(folder_path):
+        print(f"Error: Directory '{folder_path}' does not exist.")
+        return
+
+    # 1. Get list of files ending with .txt
+    txt_files = [f for f in os.listdir(folder_path) if f.lower().endswith('.txt')]
+
+    # 2. Iterate through each file
+    for filename in sorted(txt_files):
+        file_path = os.path.join(folder_path, filename)
+        
+        # 3. Initialize tracking strings
+        choices_made = ""
+        choices_done = ""
+        
+        indices = []
+        
+        # 4. Read the lines of text from the file
+        with open(file_path, 'r', encoding='utf-8') as file:
+            lines = file.readlines()
+            
+            for line in lines:
+                clean_line = line.strip()
+
+                # Some correction on the fly
+                if 'Jake Dobes'.lower() in clean_line.lower():
+                    clean_line = 'Jakub Dobes'
+                
+                # 5. Find position in choices (-1 if not found)
+                pos = -1
+                for i, choice in enumerate(choices):
+                    if choice.name.lower() in clean_line.lower():
+                        pos = i
+                        break
+
+                indices.append(pos)
+
+        # 6. Sort our indices numerically before converting to strings
+        indices.sort()
+
+        # 7. Convert all indices to strings for joining
+        indices = [str(i) for i in indices]
+
+        # 6 & 7. Format indices with commas
+        choices_made = ",".join(indices)
+        choices_done = choices_made
+
+        # 8. Output filename without extension + choices_done value
+        filename_without_ext = os.path.splitext(filename)[0]
+
+        # 9. Print the final output using "filename_without_ext" and "choices_done" following this format:
+        #    participants.append(Participant("{filename_without_ext}", [choices_done], SexType, CountryType, OfficeType))
+        print(f"participants.append(Participant(\"{filename_without_ext}\", [{choices_done}], SexType, CountryType, OfficeType))")
+
+def export_choices_to_csv(choices: List[Choice], filename: str) -> None:
+    box_style_to_label = {
+        BoxStyle.TBS_TEAM: "Team",
+        BoxStyle.TBS_SKATERS: "Forward",
+        BoxStyle.TBS_GOALIE: "Goalie",
+    }
+
+    with open(filename, 'w', encoding='utf-8', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(["Box_Number", "Box_Type", "Option_Name", "Team"])
+        for choice in choices:
+            writer.writerow([choice.box_number + 1, box_style_to_label[choice.box_style], choice.name, choice.team_abreviation])
 
 
 def init_boxes(choices: list, boxes: list) -> None:
@@ -363,7 +448,7 @@ def init_boxes(choices: list, boxes: list) -> None:
     boxes.append(Box("2. Heavy Hitters", BoxStyle.TBS_TEAM))
     boxes.append(Box("3 Frontline Squads", BoxStyle.TBS_TEAM))
     boxes.append(Box("4. Serious Challengers", BoxStyle.TBS_TEAM))
-    boxes.append(Box("5. 100-Point Club", BoxStyle.TBS_SKATERS))
+    boxes.append(Box("5. 100-Point Hunters", BoxStyle.TBS_SKATERS))
     boxes.append(Box("6. Premier Superstars", BoxStyle.TBS_SKATERS))
     boxes.append(Box("7. Hart Contenders", BoxStyle.TBS_SKATERS))
     boxes.append(Box("8. Heavy Producers", BoxStyle.TBS_SKATERS))
@@ -407,67 +492,83 @@ def init_offices(offices: list[OfficeData]) -> None:
 
 
 def init_participants(participants: list) -> None:
-    participants.append(Participant("John Doe Drummondville", [0,6,12,18,24,30,36,42,48,54,60,66,72,78,84,90,96,102,108,114,120,126,132,138], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-    participants.append(Participant("John Doe Las Vegas", [1,7,13,19,25,31,37,43,49,55,61,67,73,79,85,91,97,103,109,115,121,127,133,139], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    participants.append(Participant("John Doe Reno", [2,8,14,20,26,32,38,44,50,56,62,68,74,80,86,92,98,104,110,116,122,128,134,140], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_RENO))
-    participants.append(Participant("John Doe Moncton", [3,9,15,21,27,33,39,45,51,57,63,69,75,81,87,93,99,105,111,117,123,129,135,141], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
-    participants.append(Participant("John Doe Austin", [4,10,16,22,28,34,40,46,52,58,64,70,76,82,88,94,100,106,112,118,124,130,136,142], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
-    participants.append(Participant("John Doe Atlanta", [5,11,17,23,29,35,41,47,53,59,65,71,77,83,89,95,101,107,113,119,125,131,137,143], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_ATLANTA))
+    participants.append(Participant("Adam Dyer", [2,7,16,22,27,31,41,47,48,59,64,66,73,78,87,92,97,102,112,116,121,130,136,138], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Alex Goguen", [1,8,13,19,28,35,41,44,49,57,65,71,73,78,88,91,101,103,112,115,121,128,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Armando Macias", [0,6,16,19,28,31,36,42,50,57,63,66,73,78,88,91,99,107,113,116,120,131,136,139], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Brandon Smith", [1,6,13,22,28,34,38,45,50,54,61,71,75,78,87,91,101,107,112,115,121,130,137,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Charles Rutherford", [1,8,13,19,28,32,40,45,50,54,62,66,74,79,85,94,101,103,111,116,123,127,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Chris Maples", [1,6,13,19,26,32,38,45,49,54,61,71,76,78,88,94,101,103,108,115,121,127,135,139], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Christophe Diamond", [1,6,13,22,28,33,38,45,50,54,61,71,73,81,85,91,101,107,112,115,121,131,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Claire Seemayer", [1,8,13,20,26,30,40,45,50,59,61,71,74,82,85,91,96,102,111,118,121,131,132,139], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Craig Vinciguerra", [3,8,13,23,27,31,38,47,49,56,61,67,72,78,87,91,101,104,112,115,121,130,137,141], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Derek Pacuk", [1,6,17,22,28,31,38,44,49,54,61,68,73,78,87,94,101,107,112,118,122,131,137,143], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Dirk Geere", [3,8,16,22,28,31,41,47,48,57,62,69,73,79,85,95,97,105,112,116,121,131,132,142], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Dominic Lachance", [1,6,13,19,28,35,38,45,49,54,61,71,73,78,87,94,101,106,110,115,122,130,135,143], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Dylan Howe", [3,8,13,21,25,35,40,45,49,54,62,68,73,79,88,94,101,103,112,118,123,131,132,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Éric Colgan", [1,8,16,19,28,31,40,47,49,59,61,68,77,79,88,94,101,103,110,115,124,131,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Eric Loat", [1,8,13,22,28,30,41,45,49,54,62,71,73,83,89,94,101,103,112,119,122,130,134,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Erick James", [5,8,12,22,27,33,36,42,48,54,62,71,73,78,84,90,101,103,109,116,121,130,136,138], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Erick Ndjomo", [0,6,14,23,28,35,36,43,50,56,61,71,76,79,87,91,100,103,109,116,121,126,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("François Désilets", [5,9,12,20,28,30,38,45,49,54,62,68,73,78,87,91,101,105,110,116,125,128,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("François Hébert", [1,6,16,19,26,32,38,45,49,54,61,71,76,78,88,94,101,103,108,115,121,127,136,141], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("François Leger", [0,11,17,22,28,33,38,42,50,59,65,66,75,78,87,94,101,106,112,115,122,130,137,143], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("François Vigneault", [1,6,16,19,26,32,37,44,50,57,62,71,74,81,88,94,99,103,113,116,121,131,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Gabe Herod", [1,11,16,19,28,32,38,42,50,54,61,71,73,78,88,91,101,103,112,115,122,131,137,142], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Ginette Mckay", [0,8,16,22,28,32,38,45,50,57,62,66,75,83,87,91,100,107,108,117,123,130,136,143], SexType.SEX_FEMALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Giuseppe Vacirca", [3,8,13,20,28,31,40,45,53,54,61,71,72,81,89,91,100,106,109,115,121,131,135,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Hugues Labrecque", [1,6,16,19,28,31,36,45,50,54,64,71,76,80,88,94,100,107,112,115,121,131,132,142], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Israel Trudel Denis", [1,10,13,19,24,30,39,47,48,54,63,69,72,82,85,94,96,105,111,119,123,128,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Jacob Zydorowicz", [2,8,16,18,27,32,38,47,50,54,61,71,73,79,87,94,101,102,112,118,124,131,132,142], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Jaymz Latour", [1,11,13,22,28,32,38,45,50,57,61,71,73,79,88,91,101,103,111,118,123,127,137,142], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Jeff Baker", [0,9,13,19,28,31,40,45,50,54,64,66,74,78,87,91,99,103,113,116,122,127,136,143], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Jeremie Cormier", [1,9,14,18,28,31,40,42,52,57,61,71,77,78,86,92,100,103,110,117,123,128,135,140], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    participants.append(Participant("Joe Kaszupski", [1,8,17,22,28,31,40,42,48,59,61,69,77,83,85,90,101,102,110,118,125,131,132,142], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Karine Descheneaux", [1,10,13,19,24,35,38,42,50,59,61,66,73,78,85,94,101,102,112,115,121,130,137,139], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Keith Menchin", [3,8,13,22,24,32,38,44,49,57,60,66,77,80,88,91,100,107,112,119,121,131,134,142], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_ATLANTA))
+    participants.append(Participant("Keith Santos", [5,8,13,21,24,31,40,47,48,54,61,71,75,79,89,92,101,105,108,117,125,127,132,139], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Kevin Peake", [2,7,16,21,27,33,41,44,50,59,64,66,73,83,87,94,101,102,112,115,121,130,136,142], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Luc Carignan", [1,6,12,23,26,32,38,45,50,57,62,68,76,78,88,94,101,103,108,116,123,127,136,141], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Luc McCutcheon", [0,6,13,19,26,32,38,45,50,54,61,71,73,78,88,91,101,103,112,115,123,127,135,139], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Marc Mathews", [5,11,13,22,27,31,40,47,51,54,65,67,77,81,85,91,101,105,113,116,124,131,137,143], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Marc Plante", [0,11,13,21,25,34,38,46,50,59,65,71,75,81,85,94,100,106,113,116,124,128,134,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Marcel Lachance", [1,8,13,21,27,30,38,47,50,56,61,70,76,78,87,94,100,103,111,114,122,128,135,138], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Maxime Villandré", [1,6,16,19,26,32,38,45,49,54,61,71,76,78,88,94,101,103,108,118,121,130,137,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Mélanie Markis", [1,6,13,22,27,32,38,44,49,59,61,68,75,78,87,94,97,102,112,118,120,130,137,139], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Melanie Toutant", [0,10,13,22,26,35,38,45,50,59,64,68,74,80,85,91,99,106,111,117,122,131,134,139], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Miguel Piette", [1,8,13,22,28,35,38,44,50,54,60,66,75,78,87,91,101,107,112,119,122,131,135,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Mike Horn", [1,8,13,21,27,31,37,45,51,56,61,67,76,82,85,92,101,104,110,115,123,131,135,140], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Mike Wabschall", [1,6,16,19,28,33,38,44,50,57,61,71,75,78,88,94,101,106,108,118,122,131,137,143], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Minhye Kim", [1,8,16,20,28,32,38,45,49,54,61,71,73,79,88,94,101,103,108,115,121,131,132,141], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Mohamed Amine Daoud", [1,8,16,19,28,32,38,44,50,54,61,71,75,78,87,94,101,107,108,115,121,131,137,142], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Olivier Lafrenière", [2,8,17,22,28,31,40,47,50,54,61,71,73,81,87,94,100,103,108,115,121,130,137,142], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Olivier Samson", [2,8,13,20,28,33,36,44,50,54,62,69,75,78,85,91,100,107,108,115,124,130,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Pierre Guay", [1,8,13,19,28,32,38,47,50,57,61,71,73,78,88,91,101,103,108,115,121,131,137,142], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Quentin Langelot", [1,9,14,20,28,32,40,44,51,56,63,67,73,79,88,93,98,103,111,116,121,127,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Ralph Benjamin Libao", [1,6,17,22,28,31,38,44,49,54,61,68,73,78,87,94,101,107,112,118,122,131,137,143], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Robert Brillon", [1,8,13,22,28,35,40,46,50,54,61,68,73,78,88,91,101,107,112,116,122,131,134,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Sandra St-Onge", [1,10,13,22,28,31,36,42,49,57,61,71,73,79,88,94,101,103,108,116,122,131,136,143], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Scott McSorley", [1,7,16,19,28,32,36,45,49,54,64,71,76,80,88,94,101,102,112,115,123,127,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Simon Belley", [0,8,13,19,27,35,41,45,48,59,63,69,77,82,87,94,96,105,110,117,125,127,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Simon Courtemanche", [1,6,13,22,28,32,40,44,49,54,61,66,76,79,87,91,100,105,112,118,121,130,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Simon Papineau", [5,6,13,19,24,31,40,46,53,55,61,69,77,78,85,94,96,102,111,117,122,131,132,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Sophie Chabot", [0,9,13,22,27,30,36,44,52,58,63,66,73,80,89,94,98,102,111,115,125,128,135,139], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Stéphan Généreux", [1,6,16,19,27,32,38,43,49,59,63,67,75,78,87,91,97,107,112,119,123,129,134,143], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Tatiana Beaubien", [1,6,13,19,24,30,40,47,53,57,63,71,77,79,85,91,101,105,111,118,121,128,136,139], SexType.SEX_FEMALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Tim Russo", [1,8,16,19,27,32,37,45,48,57,62,71,73,79,88,94,101,104,112,116,121,127,136,140], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    participants.append(Participant("Tommy Hamel", [1,8,13,22,28,35,38,45,49,54,61,66,73,78,85,94,101,103,111,115,121,127,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Vincent Boisvert", [3,8,14,22,28,31,40,42,53,54,61,66,76,78,87,94,97,107,112,118,121,129,136,139], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Yvan Paradis", [1,8,17,22,28,33,39,42,52,57,61,66,73,78,87,94,99,107,110,118,120,131,136,142], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Yves Lavoie", [0,6,13,19,24,35,40,44,50,55,61,66,75,79,87,91,97,103,111,118,122,131,135,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
 
-   #participants.append(Participant("Craig Vinciguerra", [3, 9, 15, 19, 27, 31, 36, 40, 45, 51, 52, 59, 60, 64, 70, 73, 79, 83, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-   #participants.append(Participant("Hugues Labrecque", [2, 10, 15, 19, 25, 31, 36, 40, 46, 49, 52, 57, 61, 66, 69, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Yves Lavoie", [1, 10, 12, 19, 24, 31, 34, 43, 45, 51, 54, 59, 60, 65, 68, 73, 78, 82, 90, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Dylan Howe", [5, 7, 12, 19, 26, 31, 37, 39, 47, 48, 54, 56, 60, 65, 68, 72, 76, 82, 86, 92], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
-   #participants.append(Participant("François Vigneault", [3, 8, 14, 18, 24, 33, 37, 39, 46, 48, 52, 57, 63, 64, 69, 72, 76, 81, 86, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Brandon Smith", [5, 7, 15, 22, 26, 33, 36, 40, 45, 51, 53, 57, 60, 64, 69, 72, 79, 83, 88, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
-   #participants.append(Participant("Pierre Guay", [5, 7, 16, 19, 24, 33, 36, 40, 45, 51, 52, 57, 60, 67, 70, 72, 76, 82, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Andrew McCallum", [3, 9, 14, 19, 24, 31, 34, 40, 47, 51, 52, 59, 60, 65, 70, 73, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Jeremie Cormier", [3, 10, 16, 19, 27, 31, 35, 40, 44, 48, 54, 59, 60, 64, 71, 73, 79, 81, 86, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
-   #participants.append(Participant("Patrick Bellavance Marcoux", [5, 7, 17, 19, 24, 30, 36, 40, 45, 51, 54, 58, 63, 64, 70, 75, 79, 85, 87, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Eric Colgan", [3, 10, 12, 19, 24, 31, 34, 43, 46, 48, 54, 57, 63, 66, 69, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Yvan Paradis", [3, 8, 16, 19, 24, 30, 36, 43, 44, 50, 52, 56, 61, 67, 68, 75, 76, 81, 88, 92], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Jeff Baker", [3, 8, 15, 22, 28, 31, 36, 39, 45, 51, 52, 57, 60, 66, 71, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-   #participants.append(Participant("Samantha Poisson", [4, 8, 13, 22, 24, 31, 35, 43, 45, 50, 52, 58, 62, 65, 71, 72, 80, 81, 86, 91], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Bruno Aird", [3, 9, 13, 21, 27, 29, 38, 39, 44, 49, 52, 56, 60, 64, 71, 75, 77, 85, 86, 91], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Charles Rutherford", [3, 9, 12, 19, 24, 33, 36, 43, 45, 48, 54, 57, 63, 66, 70, 74, 76, 82, 86, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Dominic Lachance", [2, 10, 14, 19, 25, 31, 36, 40, 46, 51, 52, 59, 63, 65, 70, 72, 76, 82, 87, 92], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Luc McCutcheon", [3, 7, 16, 19, 27, 31, 36, 39, 44, 51, 52, 57, 60, 65, 71, 72, 77, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Olivier Lafrenière", [2, 8, 15, 22, 24, 33, 35, 43, 44, 49, 52, 59, 63, 67, 68, 72, 77, 83, 88, 94], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("François Hébert", [3, 10, 12, 22, 25, 33, 36, 43, 46, 48, 52, 57, 60, 66, 69, 72, 76, 85, 89, 92], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Francois Leger", [3, 7, 17, 19, 24, 33, 35, 40, 46, 51, 52, 58, 63, 67, 71, 72, 76, 82, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
-   #participants.append(Participant("Benoit Lapolice", [3, 9, 12, 19, 25, 33, 34, 43, 46, 50, 52, 57, 61, 65, 70, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Sandra St-Onge", [2, 8, 16, 19, 24, 29, 36, 43, 45, 51, 54, 57, 60, 65, 69, 72, 76, 82, 86, 95], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Vince Catalano", [3, 8, 15, 19, 24, 33, 36, 40, 46, 51, 52, 59, 63, 67, 69, 72, 76, 81, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-   #participants.append(Participant("Derek Pacuk", [3, 7, 15, 22, 26, 31, 37, 43, 45, 51, 52, 58, 62, 67, 69, 75, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-   #participants.append(Participant("Scott McSorley", [2, 10, 15, 22, 27, 33, 36, 43, 45, 51, 52, 57, 60, 66, 69, 72, 76, 82, 90, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
-   #participants.append(Participant("Nick Lape", [3, 7, 16, 23, 27, 30, 34, 39, 47, 50, 55, 59, 62, 65, 68, 75, 77, 84, 90, 92], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_RENO))
-   #participants.append(Participant("Gabe Herod", [4, 6, 17, 23, 26, 30, 37, 42, 44, 49, 55, 56, 61, 65, 68, 75, 78, 85, 89, 92], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
-   #participants.append(Participant("Quentin Langelot", [5, 8, 12, 21, 26, 30, 38, 40, 44, 50, 54, 57, 61, 67, 68, 72, 76, 84, 87, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Stéphan Généreux", [3, 6, 15, 19, 24, 30, 36, 42, 47, 50, 55, 56, 60, 65, 71, 75, 76, 85, 90, 94], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Mike Wabschall", [3, 10, 17, 20, 25, 33, 36, 43, 44, 51, 54, 59, 60, 65, 69, 73, 76, 82, 90, 91], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
-   #participants.append(Participant("Mohamed Amine Daoud", [2, 7, 17, 22, 24, 31, 36, 43, 46, 49, 52, 57, 63, 67, 69, 72, 78, 82, 87, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Marc Plante", [5, 9, 14, 18, 25, 30, 35, 42, 44, 48, 54, 59, 60, 66, 70, 74, 77, 83, 89, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Joe Kaszupski", [3, 7, 15, 22, 27, 33, 34, 40, 45, 51, 52, 57, 60, 66, 69, 73, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-   #participants.append(Participant("Andrew Burke", [3, 7, 17, 19, 24, 29, 34, 43, 45, 49, 53, 57, 63, 65, 70, 72, 79, 81, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-   #participants.append(Participant("Miguel Piette", [3, 7, 12, 20, 24, 33, 34, 40, 47, 48, 52, 56, 61, 64, 69, 72, 79, 82, 87, 94], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Alex Goguen", [4, 7, 12, 19, 24, 31, 34, 40, 44, 51, 54, 59, 61, 67, 71, 75, 76, 81, 87, 95], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
-   #participants.append(Participant("Mélanie Toutant", [1, 8, 12, 19, 25, 31, 34, 43, 46, 48, 53, 59, 60, 65, 69, 72, 76, 82, 86, 93], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Michael Stazio", [3, 10, 15, 22, 25, 31, 36, 43, 46, 48, 52, 57, 60, 66, 69, 72, 76, 81, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-   #participants.append(Participant("Luc Carignan", [2, 9, 15, 22, 27, 33, 36, 43, 46, 51, 52, 59, 63, 64, 69, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Olivier Samson", [3, 7, 14, 18, 24, 31, 34, 39, 46, 51, 52, 57, 63, 64, 70, 72, 76, 81, 86, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Karine Descheneaux", [3, 10, 15, 23, 25, 31, 34, 43, 44, 51, 52, 56, 60, 64, 69, 72, 76, 82, 87, 93], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Mélanie Markis", [5, 10, 15, 19, 26, 33, 34, 40, 46, 49, 54, 58, 60, 65, 69, 75, 76, 83, 87, 93], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Ralph Benjamin Libao", [3, 8, 16, 19, 27, 31, 37, 40, 44, 51, 52, 57, 60, 65, 68, 72, 76, 81, 86, 92], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-   #participants.append(Participant("Dalin Son", [3, 10, 12, 19, 25, 33, 34, 40, 47, 51, 52, 56, 63, 67, 69, 73, 77, 82, 88, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Sophie Chabot", [1, 10, 12, 19, 28, 31, 37, 40, 45, 51, 55, 56, 60, 66, 69, 72, 77, 84, 87, 93], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Armando Macias", [3, 8, 16, 19, 26, 33, 36, 41, 46, 48, 52, 59, 60, 64, 70, 72, 76, 84, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-   #participants.append(Participant("Robert Brillon", [4, 8, 12, 22, 24, 33, 34, 43, 47, 51, 53, 57, 62, 65, 70, 72, 78, 82, 87, 91], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Claire Seemayer", [4, 9, 15, 21, 25, 31, 34, 43, 47, 49, 54, 57, 60, 64, 71, 72, 79, 84, 88, 94], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Erick Ndjomo", [1, 7, 17, 20, 25, 30, 34, 39, 44, 48, 53, 57, 63, 65, 71, 75, 79, 84, 86, 94], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
-   #participants.append(Participant("Tommy Hamel", [3, 10, 12, 19, 24, 33, 34, 43, 46, 51, 52, 57, 61, 65, 69, 72, 76, 82, 87, 93], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    # participants.append(Participant("John Doe Drummondville", [0,6,12,18,24,30,36,42,48,54,60,66,72,78,84,90,96,102,108,114,120,126,132,138], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    # participants.append(Participant("John Doe Las Vegas", [1,7,13,19,25,31,37,43,49,55,61,67,73,79,85,91,97,103,109,115,121,127,133,139], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    # participants.append(Participant("John Doe Reno", [2,8,14,20,26,32,38,44,50,56,62,68,74,80,86,92,98,104,110,116,122,128,134,140], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_RENO))
+    # participants.append(Participant("John Doe Moncton", [3,9,15,21,27,33,39,45,51,57,63,69,75,81,87,93,99,105,111,117,123,129,135,141], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
+    # participants.append(Participant("John Doe Austin", [4,10,16,22,28,34,40,46,52,58,64,70,76,82,88,94,100,106,112,118,124,130,136,142], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN))
+    # participants.append(Participant("John Doe Atlanta", [5,11,17,23,29,35,41,47,53,59,65,71,77,83,89,95,101,107,113,119,125,131,137,143], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_ATLANTA))
+
     for iParticipantIndex, participant in enumerate(participants):
         participant.native_index = iParticipantIndex
-
 
 def validate_choices(choices: list, participants: list):
     console.print()
@@ -656,6 +757,10 @@ def extract_daily_goals_assists(json_path):
     with open(json_path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
+    # Exit if there is no gameDate in the data
+    if "gameDate" not in data["gameLog"]:
+        return []
+
     # Extract game log into a DataFrame
     df = pd.DataFrame(data["gameLog"])
 
@@ -666,7 +771,7 @@ def extract_daily_goals_assists(json_path):
     df = df[["gameDate", "goals", "assists"]]
 
     # Build the full date range
-    start_date = pd.to_datetime("2025-10-06")
+    start_date = pd.to_datetime("2026-09-29")
     end_date = pd.to_datetime(datetime.datetime.now().date())
     all_days = pd.date_range(start=start_date, end=end_date, freq="D")
 
@@ -689,6 +794,10 @@ def extract_daily_wins_losses(json_path):
     # Extract game log into DataFrame
     df = pd.DataFrame(data["gameLog"])
 
+    # Exit if there is no gameDate in the data
+    if "gameDate" not in data["gameLog"]:
+        return []
+
     # Convert gameDate to datetime
     df["gameDate"] = pd.to_datetime(df["gameDate"])
 
@@ -703,7 +812,7 @@ def extract_daily_wins_losses(json_path):
     df = df.drop(columns=["decision"])
 
     # Build full date range
-    start_date = pd.to_datetime("2025-10-06")
+    start_date = pd.to_datetime("2026-09-29")
     end_date = pd.to_datetime(datetime.datetime.now().date())
     all_days = pd.date_range(start=start_date, end=end_date, freq="D")
 
@@ -755,7 +864,7 @@ def extract_daily_team_results(json_path, team_abbrev):
     })
 
     # Build full date range
-    start_date = pd.to_datetime("2025-10-06")
+    start_date = pd.to_datetime("2026-09-29")
     end_date = pd.to_datetime(datetime.datetime.now().date())
     all_days = pd.date_range(start=start_date, end=end_date, freq="D")
 
@@ -780,7 +889,7 @@ def get_choices_individual_teams_stats2(choices: List[Choice], download_director
                 # Let's check if the file exists
                 if not os.path.exists(filename):
                     #url = f"https://api-web.nhle.com/v1/scoreboard/{sTeamdID}/now"
-                    url = f"https://api-web.nhle.com/v1/club-schedule-season/{sTeamdID}/now"
+                    url = f"https://api-web.nhle.com/v1/club-schedule-season/{sTeamdID}/20262027"
                     response = requests.get(url)
 
                     # Save raw text (JSON) to a file
@@ -815,7 +924,7 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                 filename_daybyday = f"{download_directory}\\choice_{index}_daybyday.json"
                 # if "filename_daybyday" already exists, we skip the download
                 if not os.path.exists(filename_daybyday):
-                    url_daybyday = f"https://api-web.nhle.com/v1/player/{sPlayerID}/game-log/20252026/2"
+                    url_daybyday = f"https://api-web.nhle.com/v1/player/{sPlayerID}/game-log/20262027/2"
                     response_daybyday = requests.get(url_daybyday)
 
                     # Save raw text (JSON) to a file
@@ -827,19 +936,40 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                 with open(f"{filename}", "r", encoding="utf-8") as f:
                     data = json.load(f)
 
+                season = data["featuredStats"]["season"]
+
                 if choice.box_style == BoxStyle.TBS_SKATERS:
-                    choice.nb_gameplayed = data["featuredStats"]["regularSeason"]["subSeason"]["gamesPlayed"]
-                    choice.nb_assists = data["featuredStats"]["regularSeason"]["subSeason"]["assists"]
-                    choice.nb_goals = data["featuredStats"]["regularSeason"]["subSeason"]["goals"]
-                    choice.nb_points = choice.nb_assists + choice.nb_goals
-                    choice.day_by_day_stats = extract_daily_goals_assists(filename_daybyday)
+                    choice.player_full_name = data["firstName"]["default"] + " " + data["lastName"]["default"]
+                    if choice.name != choice.player_full_name:
+                        raise ValueError(f"Name mismatch for skater player ID {sPlayerID}: expected {choice.player_full_name}, got {choice.name}")
+
+                    TeamAbreviation = data["currentTeamAbbrev"]
+                    if choice.team_abreviation != TeamAbreviation:
+                        raise ValueError(f"Team abbreviation mismatch for skater player named {choice.name} : expected {TeamAbreviation}, got {choice.team_abreviation}")
+
+                    # print(f"Processing stats for skater player named: {choice.player_full_name}")
+                    if (season == 20262027):
+                        choice.nb_gameplayed = data["featuredStats"]["regularSeason"]["subSeason"]["gamesPlayed"]
+                        choice.nb_assists = data["featuredStats"]["regularSeason"]["subSeason"]["assists"]
+                        choice.nb_goals = data["featuredStats"]["regularSeason"]["subSeason"]["goals"]
+                        choice.nb_points = choice.nb_assists + choice.nb_goals
+                        choice.day_by_day_stats = extract_daily_goals_assists(filename_daybyday)
                     choice.found = True
                     # console.print(f"Choice {choice.name} - Goals: {choice.nb_goals}, Assists: {choice.nb_assists}, Points: {choice.nb_points}", style="green")
                 elif choice.box_style == BoxStyle.TBS_GOALIE:
-                    choice.nb_gameplayed = data["featuredStats"]["regularSeason"]["subSeason"]["gamesPlayed"]
-                    choice.nb_wins = data["featuredStats"]["regularSeason"]["subSeason"]["wins"]
-                    choice.nb_points = choice.nb_wins * 2
-                    choice.day_by_day_stats = extract_daily_wins_losses(filename_daybyday)
+                    choice.player_full_name = data["firstName"]["default"] + " " + data["lastName"]["default"]
+                    if choice.name != choice.player_full_name:
+                        raise ValueError(f"Name mismatch for skater player ID {sPlayerID}: expected {choice.player_full_name}, got {choice.name}")
+
+                    TeamAbreviation = data["currentTeamAbbrev"]
+                    if choice.team_abreviation != TeamAbreviation:
+                        raise ValueError(f"Team abbreviation mismatch for skater player named {choice.name} : expected {TeamAbreviation}, got {choice.team_abreviation}")
+
+                    if (season == 20262027):
+                        choice.nb_gameplayed = data["featuredStats"]["regularSeason"]["subSeason"]["gamesPlayed"]
+                        choice.nb_wins = data["featuredStats"]["regularSeason"]["subSeason"]["wins"]
+                        choice.nb_points = choice.nb_wins * 2
+                        choice.day_by_day_stats = extract_daily_wins_losses(filename_daybyday)
                     choice.found = True
                     # console.print(f"Choice {choice.name} - Wins: {choice.nb_wins}, Points: {choice.nb_points}", style="green")
 
@@ -854,7 +984,8 @@ def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> 
     if not os.path.exists(filename):
         console.print()
         console.print(f"Downloading teams standings...", style="yellow")
-        url = f"https://api-web.nhle.com/v1/standings/now"
+        # url = f"https://api-web.nhle.com/v1/standings/20252026"
+        url = f"https://api-web.nhle.com/v1/standings/2026-09-30"
         response = requests.get(url)
 
         # Save raw text (JSON) to a file
@@ -878,38 +1009,54 @@ def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> 
                     # console.print(f"Choice {choice.name} - Game Played: {choice.nb_gameplayed}, Wins: {choice.nb_wins}, Points: {choice.nb_points}", style="green")
     console.print("Finished parsing teams standings!", style="bold green")
 
-# def get_choices_skaters_stats(choices: List[Choice], download_directory: str) -> None:
-#     for i in range(7):
-#         url = f"https://www.nhl.com/stats/skaters?reportType=season&seasonFrom=20252026&seasonTo=20252026&gameType=2&sort=points,goals,assists&page={i}&pageSize=100"
-#         filename = f"{download_directory}\\skaters{i}.lst"
-#         get_page_content(url, filename)
-#         fill_choices_skaters(choices, filename)
+
+def strip_html_tags(raw_html: str) -> str:
+    # Remove any nested tags (e.g. the <a> around a player's name) then unescape entities.
+    text = re.sub(r"<[^>]*>", "", raw_html)
+    return html.unescape(text).strip()
 
 
-# def get_choices_goalies_stats(choices: List[Choice], download_directory: str) -> None:
-#     url = f"https://www.nhl.com/stats/goalies?reportType=season&seasonFrom=20252026&seasonTo=20252026&gameType=2&sort=wins,savePct&page=0&pageSize=100"
-#     filename = f"{download_directory}\\goalies.lst"
-#     get_page_content(url, filename)
-#     fill_choices_goalies(choices, filename)
+def get_injury_report(choices: List[Choice], download_directory: str) -> None:
+    filename = f"{download_directory}\\espn_injuries.html"
 
+    if not os.path.exists(filename):
+        console.print()
+        console.print("Downloading NHL injury report from ESPN...", style="yellow")
+        url = "https://www.espn.com/nhl/injuries"
+        response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
 
-# def get_choices_teams_stats(choices: List[Choice], download_directory: str) -> None:
-#     # url = f"https://www.nhl.com/standings/2025-04-18/league"
-#     url = f"https://www.nhl.com/stats/teams"
-#     url = f"https://www.nhl.com/stats/teams?reportType=season&seasonFrom=20252026&seasonTo=20252026&gameType=2&sort=points,wins&page=0&pageSize=50"
-#     filename = f"{download_directory}\\teams.lst"
-#     get_page_content(url, filename)
-#     fill_choices_teams(choices, filename)
+        with open(f"{filename}", "w", encoding="utf-8") as f:
+            f.write(response.text)
+        console.print("Downloaded successfully!", style="bold green")
 
+    with open(f"{filename}", "r", encoding="utf-8") as f:
+        page_content = f.read()
 
-# def get_officepools_points(participants: List[Participant], download_directory: str) -> None:
-#     url1 = f"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026"
-#     url2 = f"https://www.officepools.com/nhl/classic/404165/standings#/?page=2"
-#     filename1 = f"{download_directory}\\officepools1.lst"
-#     filename2 = f"{download_directory}\\officepools2.lst"
-#     get_page_content(url1, filename1, url2, filename2)
-#     fill_office_points(participants, filename1)
-#     fill_office_points(participants, filename2)
+    console.print()
+    console.print("Parsing NHL injury report...", style="yellow")
+
+    # The ESPN injury table has no column headers worth keeping, so a plain row-by-row regex scan is enough.
+    nb_matched = 0
+    for row_match in re.finditer(r"<tr[^>]*>(.*?)</tr>", page_content, re.S | re.I):
+        cells = [strip_html_tags(cell) for cell in re.findall(r"<td[^>]*>(.*?)</td>", row_match.group(1), re.S | re.I)]
+
+        if len(cells) < 4 or cells[0] == "":
+            continue
+
+        player_name = cells[0]
+        status = cells[3]
+        comment = cells[4] if len(cells) >= 5 else ""
+
+        injury_comment = f"{status} - {comment}" if comment else status
+
+        for choice in choices:
+            if choice.box_style in (BoxStyle.TBS_SKATERS, BoxStyle.TBS_GOALIE) and choice.name.lower() == player_name.lower():
+                choice.injury_comment = injury_comment
+                nb_matched += 1
+                break
+
+    console.print(f"Finished parsing NHL injury report, matched {nb_matched} player(s)!", style="bold green")
+
 
 def get_officepools_points_manually(participants: List[Participant], download_directory: str) -> None:
     filename = f"{download_directory}\\officepools_manual.lst"
@@ -993,12 +1140,13 @@ def set_points_per_day(participants: List[Participant], choices: List[Choice]) -
             participant.day_by_day_points.append(0)
 
             for box_number, choice_index in enumerate(participant.choices):
-                if choices[choice_index].box_style == BoxStyle.TBS_SKATERS:
-                    iDailyPoints = (choices[choice_index].day_by_day_stats[day_number][0] + choices[choice_index].day_by_day_stats[day_number][1])
-                elif choices[choice_index].box_style == BoxStyle.TBS_GOALIE:
-                    iDailyPoints = (choices[choice_index].day_by_day_stats[day_number][0] * 2)
-                elif choices[choice_index].box_style == BoxStyle.TBS_TEAM:
-                    iDailyPoints= (choices[choice_index].day_by_day_stats[day_number][0] * 2)
+                if (len(choices[choice_index].day_by_day_stats) > 0):
+                    if choices[choice_index].box_style == BoxStyle.TBS_SKATERS:
+                        iDailyPoints = (choices[choice_index].day_by_day_stats[day_number][0] + choices[choice_index].day_by_day_stats[day_number][1])
+                    elif choices[choice_index].box_style == BoxStyle.TBS_GOALIE:
+                        iDailyPoints = (choices[choice_index].day_by_day_stats[day_number][0] * 2)
+                    elif choices[choice_index].box_style == BoxStyle.TBS_TEAM:
+                        iDailyPoints= (choices[choice_index].day_by_day_stats[day_number][0] * 2)
 
                 cumulative_points[box_number] += iDailyPoints
 
@@ -1095,7 +1243,7 @@ def plot_rankings_over_time(participants, output_path):
     sorted_participants = sorted(participants, key=lambda x: x.total_points, reverse=True)
 
     num_days = len(sorted_participants[0].rank_day_by_day)
-    start_date = datetime.datetime(2025, 10, 6)
+    start_date = datetime.datetime(2026, 9, 29)
     x_values = [start_date + datetime.timedelta(days=i) for i in range(num_days)]
 
     for target in sorted_participants:
@@ -1304,14 +1452,26 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".inner-table th {\n")
-        f.write(" width: 360px;\n")
-#      f.write(" width: 230px;\n")
+
+        if gFlagSelectionGrid:
+            f.write(" width: 280px;\n")
+        else:
+            f.write(" width: 360px;\n")
+            
         f.write(" height: 20px;\n")
         f.write(" border-bottom: 1px solid silver;\n")
         f.write("}\n")
         f.write("\n")
 
         f.write(".outer-table th.colspan-4 {\n")
+        f.write("  background-color: darkblue;\n")
+        f.write("  color: #ffffff;\n")
+        f.write("  font-size: 20px;\n")
+        f.write("  font-weight: bold;\n")
+        f.write("  text-align: center;\n")
+        f.write("}\n")
+
+        f.write(".outer-table th.colspan-3 {\n")
         f.write("  background-color: darkblue;\n")
         f.write("  color: #ffffff;\n")
         f.write("  font-size: 20px;\n")
@@ -1486,6 +1646,51 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("}\n")
         f.write("\n")
 
+        f.write(".who-chose-table {\n")
+        f.write("  width: 1080px;\n")
+        f.write("  table-layout: fixed;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".who-chose-table .col-choice {\n")
+        f.write("  width: 180px;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".who-chose-table .col-points, .who-chose-table .col-nb {\n")
+        f.write("  width: 50px;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".who-chose-table .col-participants {\n")
+        f.write("  width: 800px;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".who-chose-table td.col-participants {\n")
+        f.write("  font-weight: normal;\n")
+        f.write("  color: black;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".participant-hover-link, .participant-hover-link:visited {\n")
+        f.write("  color: inherit;\n")
+        f.write("  text-decoration: none;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".participant-hover-link:hover, .participant-hover-link:visited:hover {\n")
+        f.write("  color: blue;\n")
+        f.write("  text-decoration: underline;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".who-chose-own-participant {\n")
+        f.write("  font-weight: bold;\n")
+        f.write("  color: darkorange;\n")
+        f.write("}\n")
+        f.write("\n")
+
 
 def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool) -> None:
     f.write("     <table class=\"ranking-table\">\n")
@@ -1531,7 +1736,12 @@ def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool
     f.write("     </table>\n")
 
 
-def write_footer(generation_timestamp: str, f, use_external_path: bool = False) -> None:
+def write_footer(generation_timestamp: str, f, use_external_path: bool = False, participant_native_index: "int | None" = None) -> None:
+    if participant_native_index is not None:
+        who_chose_who_link = f"who_chose_who{participant_native_index}.html"
+    else:
+        who_chose_who_link = "who_chose_who.html"
+
     f.write("<br>\n")
     f.write("<table class=\"page-footer-table\">\n")
     f.write(" <tr>\n")
@@ -1546,6 +1756,8 @@ def write_footer(generation_timestamp: str, f, use_external_path: bool = False) 
     f.write("&nbsp;")
     f.write(f"<a href=\"{gExternalPath}office_stats.html\">Bluberi Offices</a>\n")
     f.write("&nbsp;")
+    f.write(f"<a href=\"{gExternalPath}{who_chose_who_link}\">Who Selected Who</a>\n")
+    f.write("&nbsp;")
     f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026\" target=\"officepools\">OfficePools</a>\n")
     f.write("  </td>\n")
 
@@ -1553,18 +1765,24 @@ def write_footer(generation_timestamp: str, f, use_external_path: bool = False) 
     f.write("</table>\n")
 
 
-def write_header(generation_timestamp: str, f, use_external_path: bool = False) -> None:
+def write_header(generation_timestamp: str, f, use_external_path: bool = False, participant_native_index: "int | None" = None) -> None:
     if use_external_path:
         sub_path = gExternalPath
     else:
         sub_path = ""
+
+    if participant_native_index is not None:
+        who_chose_who_link = f"who_chose_who{participant_native_index}.html"
+    else:
+        who_chose_who_link = "who_chose_who.html"
+
     f.write("<table class=\"page-header-table\">\n")
 
     f.write(" <tr>\n")
     f.write("  <th>\n")
 
     f.write(f"  <img src=\"{sub_path}bluberi_logo.png\" alt=\"Bluberi Logo\">&nbsp;")
-    f.write("  Bluberi Hockey Pool 2025-2026\n")
+    f.write("  Bluberi Hockey Pool 2026-2027\n")
     f.write(f"  &nbsp;<img src=\"{sub_path}bluberi_logo.png\" alt=\"Bluberi Logo\">")
     f.write("  </th>\n")
     f.write(" </tr>\n")
@@ -1582,6 +1800,8 @@ def write_header(generation_timestamp: str, f, use_external_path: bool = False) 
     f.write(f"<a href=\"{sub_path}country_stats.html\">CANADA vs USA</a>\n")
     f.write("&nbsp;")
     f.write(f"<a href=\"{sub_path}office_stats.html\">Bluberi Offices</a>\n")
+    f.write("&nbsp;")
+    f.write(f"<a href=\"{sub_path}{who_chose_who_link}\">Who Selected Who</a>\n")
     f.write("&nbsp;")
     f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026\" target=\"officepools\">OfficePools</a>\n")
     f.write("  </td>\n")
@@ -1944,7 +2164,7 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
     console.print()
     console.print("Stats by Offices", style="yellow")
     for office_participant in sorted_office_participant:
-        console.print(f"{office_participant.average_points} - {office_participant.name}", style="bold green")
+        console.print(f"{float(office_participant.average_points):7.2f} - {office_participant.name}", style="bold green")
 
     # Let's generate a html file with the results
     with open(f"{for_website_directory}\\office_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
@@ -2037,7 +2257,7 @@ def produce_email_message(generation_timestamp: str, for_website_directory: str,
         f.write("<html lang=\"en\">\n")
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
-        f.write(f"    <title>Bluberi Hockey Pool 2025-2026 (Generated on {generation_timestamp})</title>\n")
+        f.write(f"    <title>Bluberi Hockey Pool 2026-2027 (Generated on {generation_timestamp})</title>\n")
         f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
@@ -2087,6 +2307,182 @@ def produce_email_message(generation_timestamp: str, for_website_directory: str,
         f.write("</html>\n")
 
 
+def produce_injury_report_grid(generation_timestamp: str, for_website_directory: str, choices: List[Choice]) -> None:
+    injured_choices = [choice for choice in choices if choice.injury_comment != ""]
+    injured_choices.sort(key=lambda choice: locale.strxfrm(choice.name))
+
+    with open(f"{for_website_directory}\\injury_report.html", 'w', encoding='utf-8', newline='\r\n') as f:
+        f.write("<!DOCTYPE html>\n")
+        f.write("<html lang=\"en\">\n")
+        f.write("  <head>\n")
+        f.write("     <meta charset=\"UTF-8\">\n")
+        f.write(f"    <title>Injury Reports (Generated on {generation_timestamp})</title>\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
+        f.write("  </head>\n")
+
+        f.write("\n")
+        f.write("  <body>\n")
+
+        write_header(generation_timestamp, f)
+
+        f.write("     <table class=\"ranking-table\">\n")
+
+        f.write("       <tr>\n")
+        f.write("         <th colspan=\"3\" class=\"colspan-3\">Injury Reports</th>\n")
+        f.write("       </tr>\n")
+
+        f.write("       <tr>\n")
+        f.write("         <th class=\"ranking_header\">Player</th>\n")
+        f.write("         <th class=\"ranking_header\">Team</th>\n")
+        f.write("         <th class=\"ranking_header\">Status / Comment</th>\n")
+        f.write("       </tr>\n")
+
+        row_color = "row_odd"
+
+        for choice in injured_choices:
+            row_color = "row_even" if row_color == "row_odd" else "row_odd"
+
+            f.write(f"       <tr class=\"{row_color}\">\n")
+            f.write(f"         <td>{choice.name}</td>\n")
+            f.write(f"         <td class=\"just_center\">{choice.team_abreviation}</td>\n")
+            f.write(f"         <td>{choice.injury_comment}</td>\n")
+            f.write("       </tr>\n")
+
+        f.write("     </table>\n")
+
+        write_footer(generation_timestamp, f)
+
+        f.write("  </body>\n")
+        f.write("</html>\n")
+
+
+def write_who_chose_who_box_table(f, box: Box, choices: List[Choice], participants: List[Participant], owner_participant: "Participant | None" = None) -> None:
+    f.write("     <table class=\"ranking-table who-chose-table\">\n")
+
+    # table-layout:fixed derives column widths from the first row, so an explicit colgroup is required.
+    f.write("       <colgroup>\n")
+    f.write("         <col class=\"col-choice\">\n")
+    f.write("         <col class=\"col-points\">\n")
+    f.write("         <col class=\"col-nb\">\n")
+    f.write("         <col class=\"col-participants\">\n")
+    f.write("       </colgroup>\n")
+
+    f.write("       <tr>\n")
+    f.write(f"         <th colspan=\"4\" class=\"colspan-4\">{box.name}</th>\n")
+    f.write("       </tr>\n")
+
+    f.write("       <tr>\n")
+    f.write("         <th class=\"ranking_header col-choice\">Choice</th>\n")
+    f.write("         <th class=\"ranking_header col-points\">Points</th>\n")
+    f.write("         <th class=\"ranking_header col-nb\">Nb</th>\n")
+    f.write("         <th class=\"ranking_header col-participants\">Participants</th>\n")
+    f.write("       </tr>\n")
+
+    row_color = "row_odd"
+
+    for choice_index in box.choices:
+        choice = choices[choice_index]
+
+        chosen_by = [participant for participant in participants if choice_index in participant.choices]
+        chosen_by.sort(key=lambda participant: locale.strxfrm(participant.name))
+
+        chosen_by_links = []
+        for participant in chosen_by:
+            link = f"<a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a>"
+            if owner_participant is not None and participant is owner_participant:
+                link = f"<span class=\"who-chose-own-participant\">{link}</span>"
+            chosen_by_links.append(link)
+
+        if owner_participant is not None:
+            if owner_participant.choices[choice.box_number] == choice_index:
+                if owner_participant.lowest_round == choice.box_number:
+                    row_class = "participant_choice_dropped"
+                elif choice.nb_points == box.best_points:
+                    row_class = "participant_choice_best"
+                elif choice.nb_points == box.worse_points:
+                    row_class = "participant_choice_worse"
+                else:
+                    row_class = "participant_choice_normal"
+            else:
+                if owner_participant.lowest_round == choice.box_number:
+                    row_class = "participant_not_choice_dropped"
+                else:
+                    row_class = "participant_not_choice_normal"
+        else:
+            row_color = "row_even" if row_color == "row_odd" else "row_odd"
+            row_class = row_color
+
+        f.write(f"       <tr class=\"{row_class}\">\n")
+        f.write(f"         <td class=\"col-choice\">{choice.name}</td>\n")
+        f.write(f"         <td class=\"just_center col-points\">{choice.nb_points}</td>\n")
+        f.write(f"         <td class=\"just_center col-nb\">{len(chosen_by)}</td>\n")
+        f.write(f"         <td class=\"col-participants\">{', '.join(chosen_by_links)}</td>\n")
+        f.write("       </tr>\n")
+
+    f.write("     </table>\n")
+
+
+def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory: str, boxes: List[Box], choices: List[Choice], participants: List[Participant]) -> None:
+    # Let's generate a html file showing, for each box, who chose which choice.
+    with open(f"{for_website_directory}\\who_chose_who.html", 'w', encoding='utf-8', newline='\r\n') as f:
+        f.write("<!DOCTYPE html>\n")
+        f.write("<html lang=\"en\">\n")
+        f.write("  <head>\n")
+        f.write("     <meta charset=\"UTF-8\">\n")
+        f.write(f"    <title>Who Chose Who (Generated on {generation_timestamp})</title>\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
+        f.write("  </head>\n")
+
+        f.write("\n")
+        f.write("  <body>\n")
+
+        write_header(generation_timestamp, f)
+
+        for box in boxes:
+            write_who_chose_who_box_table(f, box, choices, participants)
+            f.write("<BR>\n")
+
+        write_footer(generation_timestamp, f)
+
+        f.write("  </body>\n")
+        f.write("</html>\n")
+
+    # Let's generate one html file per participant, highlighting their own choices.
+    for participant in participants:
+        with open(f"{for_website_directory}\\who_chose_who{participant.native_index}.html", 'w', encoding='utf-8', newline='\r\n') as f:
+            f.write("<!DOCTYPE html>\n")
+            f.write("<html lang=\"en\">\n")
+            f.write("  <head>\n")
+            f.write("     <meta charset=\"UTF-8\">\n")
+            f.write(f"    <title>Who Chose Who: {participant.name} (Generated on {generation_timestamp})</title>\n")
+            f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+            f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
+            f.write("  </head>\n")
+
+            f.write("\n")
+            f.write("  <body>\n")
+
+            write_header(generation_timestamp, f)
+
+            f.write("     <table class=\"ranking-table who-chose-table\">\n")
+            f.write("       <tr>\n")
+            f.write(f"         <th colspan=\"4\" class=\"colspan-4\">{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points</th>\n")
+            f.write("       </tr>\n")
+            f.write("     </table>\n")
+            f.write("<BR>\n")
+
+            for box in boxes:
+                write_who_chose_who_box_table(f, box, choices, participants, owner_participant=participant)
+                f.write("<BR>\n")
+
+            write_footer(generation_timestamp, f)
+
+            f.write("  </body>\n")
+            f.write("</html>\n")
+
+
 def produce_personal_grid(generation_timestamp: str, for_website_directory: str, boxes: List[Box], choices: List[Choice], participants: List[Participant]) -> None:
     # Let's generate a html file with the results
     for iParticipantIndex, participant in enumerate(participants):
@@ -2106,23 +2502,31 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
             f.write("\n")
             f.write("  <body>\n")
 
-            write_header(generation_timestamp, f)
+            if not gFlagSelectionGrid:
+                write_header(generation_timestamp, f, participant_native_index=participant.native_index)
 
             f.write("     <table class=\"outer-table\">\n")
 
-            header_line = f"{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points"
+            NumberOfRow = 3
+
+            if gFlagSelectionGrid:
+                header_line = 'Grille de Sélection / Selection Grid'
+            else:
+                header_line = f"{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points"
+
             f.write("       <tr>\n")
-            f.write(f"         <th colspan=\"4\" class=\"colspan-4\">{header_line}</th>\n")
+            f.write(f"         <th colspan=\"{NumberOfRow}\" class=\"colspan-{NumberOfRow}\">{header_line}</th>\n")
             f.write("       </tr>            \n")
 
-            for i in range(6):
+            for i in range(8):
                 f.write("      <tr>\n")
-                max_choices = max(boxes[i*4].nb_choices, boxes[i*4+1].nb_choices, boxes[i*4+2].nb_choices, boxes[i*4+3].nb_choices)
-                for j in range(4):
+                # max_choices = max(boxes[i*NumberOfRow].nb_choices, boxes[i*NumberOfRow+1].nb_choices, boxes[i*NumberOfRow+2].nb_choices)
+                max_choices = 6
+                for j in range(3):
                     f.write(f"        <td>\n")
                     f.write(f"          <table  class=\"inner-table\" border='0'>\n")
 
-                    box_number = (i*4)+j
+                    box_number = (i*NumberOfRow)+j
 
                     f.write(f"            <tr>\n")
                     if participant.lowest_round == box_number:
@@ -2130,37 +2534,49 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                     else:
                         th_class_name = '"box_header_normal"'
 
-                    # 2026-09-20:DB Default to normal header if no special condition is met
-                    th_class_name = '"box_header_normal"'
+                    if gFlagSelectionGrid:
+                        th_class_name = '"box_header_normal"'
 
-                    if (boxes[box_number].box_style == BoxStyle.TBS_TEAM) or (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
-#                     f.write(f"              <th colspan='3' class={th_class_name}>Box #{box_number+1}</th>\n")
-                      f.write(f"              <th colspan='5' class={th_class_name}>{boxes[box_number].name}</th>\n")
-                    if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
-#                     f.write(f"              <th colspan='4' class={th_class_name}>Box #{box_number+1}</th>\n")
-                      f.write(f"              <th colspan='6' class={th_class_name}>{boxes[box_number].name}</th>\n")
+                    if gFlagSelectionGrid:
+                        f.write(f"              <th colspan='3' class={th_class_name}>{boxes[box_number].name}</th>\n")
+                    else:
+                        if (boxes[box_number].box_style == BoxStyle.TBS_TEAM) or (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
+                            f.write(f"              <th colspan='5' class={th_class_name}>{boxes[box_number].name}</th>\n")
+                        if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
+                            f.write(f"              <th colspan='6' class={th_class_name}>{boxes[box_number].name}</th>\n")
                     f.write(f"            </tr>\n")
 
                     f.write(f'            <tr class={"participant_choice_normal"}>\n')
                     if (boxes[box_number].box_style == BoxStyle.TBS_TEAM):
                         f.write(f"              <td style=\"text-align: center;\">Teams</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">W</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
+                        if not gFlagSelectionGrid:
+                            f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
+                            f.write(f"              <td style=\"text-align: center;\">W</td>\n")
+                            f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
                         f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
+                        if gFlagSelectionGrid:
+                            f.write(f"              <td style=\"text-align: center;\">\"X\"</td>\n")
+
                     if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
                         f.write(f"              <td style=\"text-align: center;\">Players</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">G</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">A</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
+                        if not gFlagSelectionGrid:
+                            f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
+                            f.write(f"              <td style=\"text-align: center;\">G</td>\n")
+                            f.write(f"              <td style=\"text-align: center;\">A</td>\n")
+                            f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
                         f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
+                        if gFlagSelectionGrid:
+                            f.write(f"              <td style=\"text-align: center;\">\"X\"</td>\n")
+
                     if (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
                         f.write(f"              <td style=\"text-align: center;\">Players</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">W</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
+                        if not gFlagSelectionGrid:
+                            f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
+                            f.write(f"              <td style=\"text-align: center;\">W</td>\n")
+                            f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
                         f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
+                        if gFlagSelectionGrid:
+                            f.write(f"              <td style=\"text-align: center;\">\"X\"</td>\n")
                     f.write(f"            </tr>\n")
 
                     for k in range(max_choices):
@@ -2182,21 +2598,31 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                                 else:
                                     tr_participant = '"participant_not_choice_normal"'
 
-                            tr_participant = '"participant_not_choice_normal"'
+                            if gFlagSelectionGrid:
+                                tr_participant = '"participant_not_choice_normal"'
 
                             f.write(f"            <tr class={tr_participant}>\n")
-                            f.write(f"              <td>{choice.name} ({choice.team_abreviation.lower()})</td>\n")
-                            if (boxes[box_number].box_style == BoxStyle.TBS_TEAM) or (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
-                                f.write(f"              <td style=\"text-align: right;\">{choice.nb_gameplayed}&nbsp;</td>\n")  
-                                f.write(f"              <td style=\"text-align: right;\">{choice.nb_wins}&nbsp;</td>\n")
-                            if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
-                                f.write(f"              <td style=\"text-align: right;\">{choice.nb_gameplayed}&nbsp;</td>\n")  
-                                f.write(f"              <td style=\"text-align: right;\">{choice.nb_goals}&nbsp;</td>\n")
-                                f.write(f"              <td style=\"text-align: right;\">{choice.nb_assists}&nbsp;</td>\n")
-                            f.write(f"              <td style=\"text-align: right;\">{choice.nb_points}&nbsp;</td>\n")
+
+                            if boxes[box_number].box_style == BoxStyle.TBS_TEAM:
+                                f.write(f"              <td>{choice.name}</td>\n")
+
+                            if (boxes[box_number].box_style == BoxStyle.TBS_SKATERS) or (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
+                                f.write(f"              <td>{choice.name} ({choice.team_abreviation.lower()})</td>\n")
+
+                            if not gFlagSelectionGrid:
+                                if (boxes[box_number].box_style == BoxStyle.TBS_TEAM) or (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
+                                    f.write(f"              <td style=\"text-align: right;\">{choice.nb_gameplayed}&nbsp;</td>\n")  
+                                    f.write(f"              <td style=\"text-align: right;\">{choice.nb_wins}&nbsp;</td>\n")
+                                if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
+                                    f.write(f"              <td style=\"text-align: right;\">{choice.nb_gameplayed}&nbsp;</td>\n")  
+                                    f.write(f"              <td style=\"text-align: right;\">{choice.nb_goals}&nbsp;</td>\n")
+                                    f.write(f"              <td style=\"text-align: right;\">{choice.nb_assists}&nbsp;</td>\n")
+                                f.write(f"              <td style=\"text-align: right;\">{choice.nb_points}&nbsp;</td>\n")
 
                             # Write the average under with two decimals after the point of choice.nb_points over choice.nb_gameplayed
                             f.write(f"              <td style=\"text-align: right;\">{(choice.nb_points / choice.nb_gameplayed) if choice.nb_gameplayed > 0 else 0:.2f}&nbsp;</td>\n")
+                            if gFlagSelectionGrid:
+                                f.write(f"              <td style=\"text-align: center;\">&nbsp;&nbsp;</td>\n")
                             f.write(f"            </tr>\n")
                         else:
                             f.write(f"            <tr>\n")
@@ -2208,14 +2634,16 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                 f.write("      </tr>\n")
             f.write("    </table>\n")
 
-            f.write("<BR>\n")
 
             # Now, add the personal graphic image showing the ranking over time for this participant.
             # It's an image. The image is generated in the plot_rankings_over_time function and is named personal_ranking_{iParticipantIndex}.png
-            sub_path = ""
-            f.write(f"<img src=\"{sub_path}rankings_{iParticipantIndex}.png\" alt=\"Ranking over time for {participant.name}\" class=\"personal-ranking-image\">\n")
+            if gPlotOfRankingOverTime:
+                f.write("<BR>\n")
+                sub_path = ""
+                f.write(f"<img src=\"{sub_path}rankings_{iParticipantIndex}.png\" alt=\"Ranking over time for {participant.name}\" class=\"personal-ranking-image\">\n")
 
-            write_footer(generation_timestamp, f)
+            if not gFlagSelectionGrid:
+                write_footer(generation_timestamp, f, participant_native_index=participant.native_index)
 
             f.write("  </body>\n")
             f.write("\n")
@@ -2223,6 +2651,8 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
 
 
 def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
+    global gProcessChoixesFromTmp
+
     today_string = datetime.date.today().strftime("%Y-%m-%d")
     today_directory = f'.\\{today_string}'
 
@@ -2245,6 +2675,12 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
 
     boxes = []
     init_boxes(choices, boxes)
+    export_choices_to_csv(choices, os.path.join(for_website_directory, "choices.csv"))
+    if gProcessChoixesFromTmp:
+        process_choice_files(choices, r'c:\tmp\Participants')
+
+    # For current debugging prupose, halt script execution here.
+    # sys.exit(0)
 
     participants = []
     init_participants(participants)
@@ -2264,6 +2700,7 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     get_choices_skaters_stats2(choices, download_directory)
     get_choices_teams_stats2(choices, download_directory)
     get_choices_individual_teams_stats2(choices, download_directory)
+    get_injury_report(choices, download_directory)
 
     # 2026-09-20:DB-Let's try for this year not using Office Pools!
     # get_officepools_points_from_excel_file(participants, r'c:\Users\DBisson\Downloads\custom.xls')
@@ -2285,7 +2722,8 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
         compare_nhl_vs_officepools(participants)
 
     # 2026-09-20:DB-For the moment, no graph with evolution.
-    # plot_rankings_over_time(participants, for_website_directory)
+    if gPlotOfRankingOverTime:
+        plot_rankings_over_time(participants, for_website_directory)
 
     copy_required_ressources(for_website_directory, offices, countries)
     procedure_css_file(for_website_directory)
@@ -2295,6 +2733,8 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     produce_country_grid(report_datetime, for_website_directory, participants, countries)
     produce_office_grid(report_datetime, for_website_directory, participants, offices)
     produce_email_message(report_datetime, for_website_directory, participants, offices)
+    produce_who_chose_who_grid(report_datetime, for_website_directory, boxes,choices,participants)
+    produce_injury_report_grid(report_datetime, for_website_directory, choices)
 
     compress_website_directory(for_website_directory, f'c:\\tmp\\bluberi_pool_{today_string}.zip')
 
