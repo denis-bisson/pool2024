@@ -501,6 +501,7 @@ def init_participants(participants: list) -> None:
     participants.append(Participant("Christophe Diamond", [1,6,13,22,28,33,38,45,50,54,61,71,73,81,85,91,101,107,112,115,121,131,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
     participants.append(Participant("Claire Seemayer", [1,8,13,20,26,30,40,45,50,59,61,71,74,82,85,91,96,102,111,118,121,131,132,139], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
     participants.append(Participant("Craig Vinciguerra", [3,8,13,23,27,31,38,47,49,56,61,67,72,78,87,91,101,104,112,115,121,130,137,141], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
+    participants.append(Participant("Denis Bisson", [5,9,13,22,28,35,36,45,49,57,65,67,73,81,85,91,96,102,109,118,122,130,134,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
     participants.append(Participant("Derek Pacuk", [1,6,17,22,28,31,38,44,49,54,61,68,73,78,87,94,101,107,112,118,122,131,137,143], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
     participants.append(Participant("Dirk Geere", [3,8,16,22,28,31,41,47,48,57,62,69,73,79,85,95,97,105,112,116,121,131,132,142], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
     participants.append(Participant("Dominic Lachance", [1,6,13,19,28,35,38,45,49,54,61,71,73,78,87,94,101,106,110,115,122,130,135,143], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
@@ -984,8 +985,12 @@ def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> 
     if not os.path.exists(filename):
         console.print()
         console.print(f"Downloading teams standings...", style="yellow")
-        # url = f"https://api-web.nhle.com/v1/standings/20252026"
-        url = f"https://api-web.nhle.com/v1/standings/2026-09-30"
+
+        # 2026-10-01:DB-When it's the very first day of activiy, when a team has not played a game yet, we need to go by a date.
+        #               Otherwise, we see incomplete standings.
+        url = f"https://api-web.nhle.com/v1/standings/now"
+        # url = f"https://api-web.nhle.com/v1/standings/2026-09-30"
+        
         response = requests.get(url)
 
         # Save raw text (JSON) to a file
@@ -1653,7 +1658,7 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".who-chose-table .col-choice {\n")
-        f.write("  width: 180px;\n")
+        f.write("  width: 200px;\n")
         f.write("}\n")
         f.write("\n")
 
@@ -1663,7 +1668,7 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".who-chose-table .col-participants {\n")
-        f.write("  width: 800px;\n")
+        f.write("  width: 780px;\n")
         f.write("}\n")
         f.write("\n")
 
@@ -1687,9 +1692,13 @@ def procedure_css_file(for_website_directory: str) -> None:
 
         f.write(".who-chose-own-participant {\n")
         f.write("  font-weight: bold;\n")
-        f.write("  color: darkorange;\n")
+        f.write("  color: navy;\n")
+        f.write("  text-shadow: 0 0 5px #ffff00, 0 0 10px #ffff00;\n")
         f.write("}\n")
         f.write("\n")
+
+
+
 
 
 def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool) -> None:
@@ -1757,8 +1766,8 @@ def write_footer(generation_timestamp: str, f, use_external_path: bool = False, 
     f.write(f"<a href=\"{gExternalPath}office_stats.html\">Bluberi Offices</a>\n")
     f.write("&nbsp;")
     f.write(f"<a href=\"{gExternalPath}{who_chose_who_link}\">Who Selected Who</a>\n")
-    f.write("&nbsp;")
-    f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026\" target=\"officepools\">OfficePools</a>\n")
+    # f.write("&nbsp;")
+    # f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026\" target=\"officepools\">OfficePools</a>\n")
     f.write("  </td>\n")
 
     f.write(" </tr>\n")
@@ -1802,8 +1811,8 @@ def write_header(generation_timestamp: str, f, use_external_path: bool = False, 
     f.write(f"<a href=\"{sub_path}office_stats.html\">Bluberi Offices</a>\n")
     f.write("&nbsp;")
     f.write(f"<a href=\"{sub_path}{who_chose_who_link}\">Who Selected Who</a>\n")
-    f.write("&nbsp;")
-    f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026\" target=\"officepools\">OfficePools</a>\n")
+    # f.write("&nbsp;")
+    # f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026\" target=\"officepools\">OfficePools</a>\n")
     f.write("  </td>\n")
     f.write(" </tr>\n")
 
@@ -2385,14 +2394,27 @@ def write_who_chose_who_box_table(f, box: Box, choices: List[Choice], participan
         choice = choices[choice_index]
 
         chosen_by = [participant for participant in participants if choice_index in participant.choices]
-        chosen_by.sort(key=lambda participant: locale.strxfrm(participant.name))
+
+        # Multi-level sort key:
+        # 1) Owner first: (participant is not owner_participant) returns False (0) for owner, True (1) for others
+        # 2) Primary sort: participant.rank
+        # 3) Secondary sort (tie-breaker): locale.strxfrm(participant.name)
+        chosen_by.sort(
+            key=lambda participant: (
+                owner_participant is not None and participant is not owner_participant,
+                participant.rank,
+                locale.strxfrm(participant.name)
+            )
+        )
 
         chosen_by_links = []
         for participant in chosen_by:
-            link = f"<a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a>"
+            link = f"<a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.rank}-{participant.name}</a>"
             if owner_participant is not None and participant is owner_participant:
                 link = f"<span class=\"who-chose-own-participant\">{link}</span>"
             chosen_by_links.append(link)
+
+
 
         if owner_participant is not None:
             if owner_participant.choices[choice.box_number] == choice_index:
@@ -2414,7 +2436,7 @@ def write_who_chose_who_box_table(f, box: Box, choices: List[Choice], participan
             row_class = row_color
 
         f.write(f"       <tr class=\"{row_class}\">\n")
-        f.write(f"         <td class=\"col-choice\">{choice.name}</td>\n")
+        f.write(f"         <td class=\"col-choice\">{choice.name} ({choice.team_abreviation.lower()})</td>\n")
         f.write(f"         <td class=\"just_center col-points\">{choice.nb_points}</td>\n")
         f.write(f"         <td class=\"just_center col-nb\">{len(chosen_by)}</td>\n")
         f.write(f"         <td class=\"col-participants\">{', '.join(chosen_by_links)}</td>\n")
