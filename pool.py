@@ -1,32 +1,30 @@
+USE_ON_LOCAL_WINDOWS = False
+
 from operator import index
 from random import choices
 import sys
 import os
-# from selenium import webdriver
-# from selenium.webdriver.edge.options import Options
 import time
-# import bs4
 import itertools
 import re
 import html
 from enum import Enum
 from typing import List
 import datetime
-# import ftplib
 import argparse
-from rich.console import Console
-import shutil
 import locale
 import requests
 import json
 import csv
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates
-import matplotlib.ticker
 
+import shutil
 
-console = Console(highlight=False)
+if USE_ON_LOCAL_WINDOWS:
+    import matplotlib.pyplot as plt
+    import matplotlib.dates
+    import matplotlib.ticker
+
 gExternalPath = 'https://global6.com/bluberipool/20262027/'
 gFlagSelectionGrid = False
 gPlotOfRankingOverTime = False
@@ -575,8 +573,8 @@ def init_participants(participants: list) -> None:
         participant.native_index = iParticipantIndex
 
 def validate_choices(choices: list, participants: list):
-    console.print()
-    console.print("Validating if choices for our participants are valid...", style="yellow")
+    print()
+    print("Validating if choices for our participants are valid...")
 
     for participant in participants:
         cumulate_choices = ""
@@ -588,10 +586,10 @@ def validate_choices(choices: list, participants: list):
 
         if cumulate_choices != "01234567891011121314151617181920212223":
             raise ValueError(f"Participant {participant.name} has invalid choices {cumulate_choices}")
-    console.print("If we've reached this point, there are all valid!", style="bold green")
+    print("If we've reached this point, there are all valid!")
 
-    console.print()
-    console.print("Validating that we found stats from NHL web site for all choices...", style="yellow")
+    print()
+    print("Validating that we found stats from NHL web site for all choices...")
     nbErrors = 0
     for choice in choices:
         if not choice.found:
@@ -599,11 +597,11 @@ def validate_choices(choices: list, participants: list):
                 print(f"Choice {choice.name} was not found in the NHL web site!")
                 nbErrors += 1
             else:
-                console.print(f"WARNING: Choice {choice.name} was not found in the NHL web site, but it's normal for the moment!", style="bold bright_yellow")
+                print(f"WARNING: Choice {choice.name} was not found in the NHL web site, but it's normal for the moment!")
 
     if nbErrors > 0:
         raise ValueError(f"There are {nbErrors} choices that were not found in the NHL web site!")
-    console.print("If we've reached this point, all choices were found in the NHL web site!", style="bold green")
+    print("If we've reached this point, all choices were found in the NHL web site!")
 
 
 # def get_page_content(url1: str, filename1: str, url2=None, filename2=None) -> None:
@@ -882,9 +880,10 @@ def extract_daily_team_results(json_path, team_abbrev):
     return list(df[["W", "team_score"]].itertuples(index=False, name=None))
 
 def get_choices_individual_teams_stats2(choices: List[Choice], download_directory: str) -> None:
-    console.print()
-    console.print("Downloading individual teams stats from NHL web site...", style="yellow")
+    print()
+    print("Downloading individual teams stats from NHL web site...")
     for index, choice in enumerate(choices):
+        print(f"Processing choice {index+1} of {len(choices)} - {(index+1) / len(choices) * 100:.2f}%")
         if choice.box_style == BoxStyle.TBS_TEAM:
             sTeamdID = choice.team_abreviation
             if sTeamdID != "":
@@ -897,18 +896,21 @@ def get_choices_individual_teams_stats2(choices: List[Choice], download_director
                     response = requests.get(url)
 
                     # Save raw text (JSON) to a file
+                    print(f"Saving day by day stats for team ID {sTeamdID} - {choice.name}...")
                     with open(f"{filename}", "w", encoding="utf-8") as f:
                         f.write(response.text)
-                    # console.print(f"Downloaded day by day stats for team {choice.name}...", style="green")
-                    console.print('.', end='', style="green")
+                else:
+                    print(f"Day by day stats for team ID {sTeamdID} - {choice.name} already exist.")
 
                 choice.day_by_day_stats = extract_daily_team_results(filename, sTeamdID)
                 choice.found = True
+   
 
 def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -> None:
-    console.print()
-    console.print("Downloading skaters and goalies stats from NHL web site...", style="yellow")
+    print()
+    print("Downloading skaters and goalies stats from NHL web site...")
     for index, choice in enumerate(choices):
+        print(f"Processing choice {index+1} of {len(choices)} - {(index+1) / len(choices) * 100:.2f}%")
         if (choice.box_style == BoxStyle.TBS_SKATERS) or (choice.box_style == BoxStyle.TBS_GOALIE):
             sPlayerID = choice.nhl_id
             if sPlayerID != "0000000":
@@ -920,10 +922,11 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                     response = requests.get(url)
 
                     # Save raw text (JSON) to a file
+                    print(f"Saving stats for skater player ID {sPlayerID} - {choice.name}...")
                     with open(f"{filename}", "w", encoding="utf-8") as f:
                         f.write(response.text)
-                    # console.print(f"Downloaded stats for skater player ID {sPlayerID} - {choice.name}...", style="green")
-                    console.print('.', end='', style="green")
+                else:
+                    print(f"Stats for skater player ID {sPlayerID} - {choice.name} already exist.")
 
                 filename_daybyday = f"{download_directory}\\choice_{index}_daybyday.json"
                 # if "filename_daybyday" already exists, we skip the download
@@ -931,11 +934,12 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                     url_daybyday = f"https://api-web.nhle.com/v1/player/{sPlayerID}/game-log/20262027/2"
                     response_daybyday = requests.get(url_daybyday)
 
+                    print(f"Saving day by day stats for skater player ID {sPlayerID} - {choice.name}...")
                     # Save raw text (JSON) to a file
                     with open(f"{filename_daybyday}", "w", encoding="utf-8") as f:
                         f.write(response_daybyday.text)
-                    # console.print(f"Downloaded day by day stats for skater player ID {sPlayerID} - {choice.name}...", style="green")
-                    console.print('.', end='', style="green")
+                else:
+                    print(f"Day by day stats for skater player ID {sPlayerID} - {choice.name} already exist.")
 
                 with open(f"{filename}", "r", encoding="utf-8") as f:
                     data = json.load(f)
@@ -959,7 +963,7 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                         choice.nb_points = choice.nb_assists + choice.nb_goals
                         choice.day_by_day_stats = extract_daily_goals_assists(filename_daybyday)
                     choice.found = True
-                    # console.print(f"Choice {choice.name} - Goals: {choice.nb_goals}, Assists: {choice.nb_assists}, Points: {choice.nb_points}", style="green")
+                    # print(f"Choice {choice.name} - Goals: {choice.nb_goals}, Assists: {choice.nb_assists}, Points: {choice.nb_points}")
                 elif choice.box_style == BoxStyle.TBS_GOALIE:
                     choice.player_full_name = data["firstName"]["default"] + " " + data["lastName"]["default"]
                     if choice.name != choice.player_full_name:
@@ -975,10 +979,10 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                         choice.nb_points = choice.nb_wins * 2
                         choice.day_by_day_stats = extract_daily_wins_losses(filename_daybyday)
                     choice.found = True
-                    # console.print(f"Choice {choice.name} - Wins: {choice.nb_wins}, Points: {choice.nb_points}", style="green")
+                    # print(f"Choice {choice.name} - Wins: {choice.nb_wins}, Points: {choice.nb_points}")
 
-    console.print()  # moves to next line
-    console.print("Finished downloading skaters and goalies stats from NHL web site!", style="bold green")
+    print()  # moves to next line
+    print("Finished downloading skaters and goalies stats from NHL web site!")
 
 
 def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> None:
@@ -986,8 +990,8 @@ def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> 
 
     # Let's check if the file exists
     if not os.path.exists(filename):
-        console.print()
-        console.print(f"Downloading teams standings...", style="yellow")
+        print()
+        print(f"Downloading teams standings...")
 
         # 2026-10-01:DB-When it's the very first day of activiy, when a team has not played a game yet, we need to go by a date.
         #               Otherwise, we see incomplete standings.
@@ -999,13 +1003,13 @@ def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> 
         # Save raw text (JSON) to a file
         with open(f"{filename}", "w", encoding="utf-8") as f:
             f.write(response.text)
-        console.print("Downloaded successfully!", style="bold green")
+        print("Downloaded successfully!")
 
     with open(f"{filename}", "r", encoding="utf-8") as f:
         data = json.load(f)
 
-    console.print()
-    console.print("Parsing teams standings...", style="yellow")
+    print()
+    print("Parsing teams standings...")
     for choice in choices:
         if choice.box_style == BoxStyle.TBS_TEAM:
             for team in data["standings"]:
@@ -1014,8 +1018,8 @@ def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> 
                     choice.nb_wins = team["wins"]
                     choice.nb_points = choice.nb_wins * 2
                     choice.found = True
-                    # console.print(f"Choice {choice.name} - Game Played: {choice.nb_gameplayed}, Wins: {choice.nb_wins}, Points: {choice.nb_points}", style="green")
-    console.print("Finished parsing teams standings!", style="bold green")
+                    # print(f"Choice {choice.name} - Game Played: {choice.nb_gameplayed}, Wins: {choice.nb_wins}, Points: {choice.nb_points}")
+    print("Finished parsing teams standings!")
 
 
 def strip_html_tags(raw_html: str) -> str:
@@ -1028,20 +1032,20 @@ def get_injury_report(choices: List[Choice], download_directory: str) -> None:
     filename = f"{download_directory}\\espn_injuries.html"
 
     if not os.path.exists(filename):
-        console.print()
-        console.print("Downloading NHL injury report from ESPN...", style="yellow")
+        print()
+        print("Downloading NHL injury report from ESPN...")
         url = "https://www.espn.com/nhl/injuries"
         response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
 
         with open(f"{filename}", "w", encoding="utf-8") as f:
             f.write(response.text)
-        console.print("Downloaded successfully!", style="bold green")
+        print("Downloaded successfully!")
 
     with open(f"{filename}", "r", encoding="utf-8") as f:
         page_content = f.read()
 
-    console.print()
-    console.print("Parsing NHL injury report...", style="yellow")
+    print()
+    print("Parsing NHL injury report...")
 
     # The ESPN injury table has no column headers worth keeping, so a plain row-by-row regex scan is enough.
     nb_matched = 0
@@ -1063,7 +1067,7 @@ def get_injury_report(choices: List[Choice], download_directory: str) -> None:
                 nb_matched += 1
                 break
 
-    console.print(f"Finished parsing NHL injury report, matched {nb_matched} player(s)!", style="bold green")
+    print(f"Finished parsing NHL injury report, matched {nb_matched} player(s)!")
 
 
 def get_officepools_points_manually(participants: List[Participant], download_directory: str) -> None:
@@ -1071,8 +1075,8 @@ def get_officepools_points_manually(participants: List[Participant], download_di
     fill_office_points_manually(participants, filename)
 
 def get_officepools_points_from_excel_file(participants: List[Participant], excel_filename: str) -> None:
-    console.print()
-    console.print("Parsing Excel file for office pools points...", style="yellow")
+    print()
+    print("Parsing Excel file for office pools points...")
     df = pd.read_excel(excel_filename)
 
     # Process in blocks of 24 rows
@@ -1091,9 +1095,9 @@ def get_officepools_points_from_excel_file(participants: List[Participant], exce
         for participant in participants:
             if participant.name == sParticipantName:
                 participant.office_total_points = (iTotalPoints - iLowestValue)
-                # console.print(f"Participant {participant.name} - Office Total Points: {participant.office_total_points}", style="green")
+                # print(f"Participant {participant.name} - Office Total Points: {participant.office_total_points}")
                 break
-    console.print("Finished parsing Excel file for office pools points!", style="bold green")
+    print("Finished parsing Excel file for office pools points!")
 
     
 
@@ -1104,8 +1108,8 @@ def validate_officepools_points(participants: List[Participant]) -> None:
 
 
 def compare_nhl_vs_officepools(participants: List[Participant]) -> None:
-    console.print()
-    console.print("Comparing NHL points with OfficePools points...", style="yellow")
+    print()
+    print("Comparing NHL points with OfficePools points...")
     nb_errors = 0
     for participant in participants:
         if participant.total_points != participant.office_total_points:
@@ -1116,15 +1120,15 @@ def compare_nhl_vs_officepools(participants: List[Participant]) -> None:
 
             
     if nb_errors > 0:
-        console.print("There are errors in the following participants:", style="bold red")
+        print("There are errors in the following participants:")
         # Let's ask user if they abort the process or continue
         user_input = input("Do you want to abort the process? (y/n): ")
         if user_input.lower() == 'y':
             raise ValueError(f"There are {nb_errors} participants that have different points between NHL and OfficePools!")
         else:
-            console.print("Continuing the process despite the errors...", style="bold yellow")
+            print("Continuing the process despite the errors...")
     else:
-        console.print("If we've reached this point, all participants have the same points between NHL and OfficePools!", style="bold green")
+        print("If we've reached this point, all participants have the same points between NHL and OfficePools!")
 
 
 def set_lowest_round(participants: List[Participant], choices: List[Choice]) -> None:
@@ -1326,11 +1330,9 @@ def set_best_and_worse_choices_per_boxes(boxes: List[Box], choices: List[Choice]
             box.worse_points = box.worse_choice_points
 
 # Compress to a zip file the website directory
-
-
 def compress_website_directory(website_directory: str, output_zip_filename: str) -> None:
-    console.print()
-    console.print(f"Compressing website directory '{website_directory}' to zip file '{output_zip_filename}'...", style="yellow")
+    print()
+    print(f"Compressing website directory '{website_directory}' to zip file '{output_zip_filename}'...")
 
     # Let's delete the zip file if it already exists
     try:
@@ -1339,15 +1341,15 @@ def compress_website_directory(website_directory: str, output_zip_filename: str)
         pass
 
     shutil.make_archive(output_zip_filename.replace('.zip', ''), 'zip', website_directory)
-    console.print(f"Website directory compressed to '{output_zip_filename}'!", style="bold green")
+    print(f"Website directory compressed to '{output_zip_filename}'!")
 
 # Function that will copy specific files to the website directory.
 # These files are coming from the directory .\ressources of the script.
 
 
 def copy_required_ressources(for_website_directory: str, param_offices: List[OfficeData], param_countries: List[CountryData]) -> None:
-    console.print()
-    console.print("Copying resource files...", style="yellow")
+    print()
+    print("Copying resource files...")
 
     shutil.copy(".\\ressources\\bluberi_logo.png", f"{for_website_directory}\\bluberi_logo.png")
     shutil.copy(".\\ressources\\global6.ico", f"{for_website_directory}\\global6.ico")
@@ -1358,7 +1360,7 @@ def copy_required_ressources(for_website_directory: str, param_offices: List[Off
     for country in param_countries:
         shutil.copy(f".\\ressources\\{country.icon_filename}", f"{for_website_directory}\\{country.icon_filename.split('\\')[-1]}")
 
-    console.print("Resource files copied!", style="bold green")
+    print("Resource files copied!")
 
 
 def procedure_css_file(for_website_directory: str) -> None:
@@ -1888,10 +1890,10 @@ def produce_sex_grid(generation_timestamp: str, for_website_directory: str, part
     # Let's sort based on the average points
     sorted_sex_participant = sorted(sex_participants, key=lambda x: x.average_points, reverse=True)
 
-    console.print()
-    console.print("Stats by Gender", style="yellow")
+    print()
+    print("Stats by Gender")
     for sex_participant in sorted_sex_participant:
-        console.print(f"{sex_participant.average_points} - {sex_participant.name}", style="bold green")
+        print(f"{sex_participant.average_points} - {sex_participant.name}")
 
     # Let's generate a html file with the results
     with open(f"{for_website_directory}\\gender_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
@@ -2009,10 +2011,10 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
             iPreviousTotalPoints = country_participant.total_points
         country_participant.rank = iRank
 
-    console.print()
-    console.print("Stats by Country", style="yellow")
+    print()
+    print("Stats by Country")
     for country_participant in sorted_country_participant:
-        console.print(f"{country_participant.average_points} - {country_participant.name}", style="bold green")
+        print(f"{country_participant.average_points} - {country_participant.name}")
 
     # Let's generate a html file with the results
     with open(f"{for_website_directory}\\country_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
@@ -2173,10 +2175,10 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
             iPreviousTotalPoints = office_participant.total_points
         office_participant.rank = iRank
 
-    console.print()
-    console.print("Stats by Offices", style="yellow")
+    print()
+    print("Stats by Offices")
     for office_participant in sorted_office_participant:
-        console.print(f"{float(office_participant.average_points):7.2f} - {office_participant.name}", style="bold green")
+        print(f"{float(office_participant.average_points):7.2f} - {office_participant.name}")
 
     # Let's generate a html file with the results
     with open(f"{for_website_directory}\\office_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
@@ -2761,8 +2763,8 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     produce_who_chose_who_grid(report_datetime, for_website_directory, boxes,choices,participants)
     produce_injury_report_grid(report_datetime, for_website_directory, choices)
 
-    compress_website_directory(for_website_directory, f'c:\\tmp\\bluberi_pool_{today_string}.zip')
-
+    if USE_ON_LOCAL_WINDOWS:
+        compress_website_directory(for_website_directory, f'c:\\tmp\\bluberi_pool_{today_string}.zip')
 
 if __name__ == "__main__":
     freeze_start = time.perf_counter()   # high‑precision timer
@@ -2770,19 +2772,19 @@ if __name__ == "__main__":
     # Set the locale to French
     locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
 
-    console.print('----------------------------------', style='bold green')
-    console.print('BLUBERI POOL GENERATOR - ver 1.1.0', style='bold green')
-    console.print('----------------------------------', style='bold green')
-    console.print()
-    console.print(f'Number of argument:{len(sys.argv)}', style='yellow')
+    print('----------------------------------')
+    print('BLUBERI POOL GENERATOR - ver 1.1.0')
+    print('----------------------------------')
+    print()
+    print(f'Number of argument:{len(sys.argv)}')
     for sArgument in sys.argv:
-        console.print(f'                   {sArgument}', style='yellow')
+        print(f'                   {sArgument}')
 
     parser = argparse.ArgumentParser(description="BLUBERI POOL GENERATOR")
     parser.add_argument('--nocompare', action='store_true', help='Do not compare the NHL results with the OfficePools results')
 
     parser.print_help()
-    console.print()
+    print()
 
     args = parser.parse_args()
 
@@ -2796,7 +2798,7 @@ if __name__ == "__main__":
     do_all_the_work(flag_compare_nhl_vs_officepools)
 
     # Ask the user to press a key to exit
-    console.print()
+    print()
 
     freeze_end = time.perf_counter()
 
