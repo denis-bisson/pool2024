@@ -1,5 +1,11 @@
-# from __future__ import annotations
-USE_ON_LOCAL_WINDOWS = False
+import platform
+IS_WINDOWS = platform.system() == "Windows"
+IS_LINUX = platform.system() == "Linux"
+
+if IS_WINDOWS:
+    print("Running on Windows")
+elif IS_LINUX:
+    print("Running on Linux")
 
 from operator import index
 from random import choices
@@ -18,27 +24,30 @@ import requests
 import json
 import csv
 import pandas as pd
+from pathlib import Path
 
 import shutil
 
-if USE_ON_LOCAL_WINDOWS:
+if IS_WINDOWS:
     import matplotlib.pyplot as plt
     import matplotlib.dates
     import matplotlib.ticker
 
 gExternalPath = 'https://global6.com/bluberipool/20262027/'
 
-if USE_ON_LOCAL_WINDOWS:
-    gTemporaryDirectory = r'c:\tmp\download'
-    gWebDirectory = r'c:\tmp\web'
+if IS_WINDOWS:
+    gTemporaryDirectory = Path('c:/tmp/download')
+    gWebDirectory = Path('c:/tmp/web')
+elif IS_LINUX:
+    gTemporaryDirectory = Path('/home/globvcrp/test_python/download')
+    gWebDirectory = Path('/home/globvcrp/www/bluberipool/20262027/')
 else:
-    gTemporaryDirectory = r'/home/globvcrp/test_python/download'
-    gWebDirectory = r'/home/globvcrp/www/bluberipool/20262027/'
+    raise EnvironmentError("Unsupported operating system")
 
 gExportChoicesToCSV = False
 gFlagSelectionGrid = False
 gPlotOfRankingOverTime = False
-gProcessChoicesFromTmp = True
+gProcessChoicesFromTmp = False
 gDoAZipAtTheEnd = False
 
 # https://github.com/Zmalski/NHL-API-Reference?tab=readme-ov-file#get-specific-player-info
@@ -852,6 +861,7 @@ def get_choices_individual_teams_stats2(choices: List[Choice], download_director
     print()
     print("Downloading individual teams stats from NHL web site...")
     for index, choice in enumerate(choices):
+        print()
         print(f"Processing choice {index+1} of {len(choices)} - {(index+1) / len(choices) * 100:.2f}%")
         if choice.box_style == BoxStyle.TBS_TEAM:
             sTeamdID = choice.team_abreviation
@@ -879,7 +889,8 @@ def get_choices_individual_teams_stats2(choices: List[Choice], download_director
                     print(f"Saving day by day stats for team ID {sTeamdID} - {choice.name}...")
                     with open(f"{filename}", "w", encoding="utf-8") as f:
                         f.write(response.text)
-                    time.sleep(2)
+                    if IS_LINUX:
+                        time.sleep(2)
                 else:
                     print(f"Day by day stats for team ID {sTeamdID} - {choice.name} already exist.")
 
@@ -891,6 +902,7 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
     print()
     print("Downloading skaters and goalies stats from NHL web site...")
     for index, choice in enumerate(choices):
+        print()
         print(f"Processing choice {index+1} of {len(choices)} - {(index+1) / len(choices) * 100:.2f}%")
         if (choice.box_style == BoxStyle.TBS_SKATERS) or (choice.box_style == BoxStyle.TBS_GOALIE):
             sPlayerID = choice.nhl_id
@@ -916,7 +928,8 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                     print(f"Saving stats for skater player ID {sPlayerID} - {choice.name}...")
                     with open(f"{filename}", "w", encoding="utf-8") as f:
                         f.write(response.text)
-                    time.sleep(2)
+                    if IS_LINUX:
+                        time.sleep(2)
                 else:
                     print(f"Stats for skater player ID {sPlayerID} - {choice.name} already exist.")
 
@@ -941,7 +954,8 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
                     # Save raw text (JSON) to a file
                     with open(f"{filename_daybyday}", "w", encoding="utf-8") as f:
                         f.write(response_daybyday.text)
-                    time.sleep(2)
+                    if IS_LINUX:
+                        time.sleep(2)
                 else:
                     print(f"Day by day stats for skater player ID {sPlayerID} - {choice.name} already exist.")
 
@@ -1018,7 +1032,8 @@ def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> 
         with open(f"{filename}", "w", encoding="utf-8") as f:
             f.write(response.text)
         print("Downloaded successfully!")
-        time.sleep(2)
+        if IS_LINUX:
+            time.sleep(2)
 
     with open(f"{filename}", "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -2703,14 +2718,16 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
 
     # Let's set a variable of type string of the format YYYY-MM-DD @ hh:mm
     MyNow = datetime.datetime.now()
-    report_datetime = MyNow.strftime("%Y-%m-%d @ %H:%M")
-    today_directory = os.path.join(gTemporaryDirectory, report_datetime)
+    report_datetime = MyNow.strftime("%Y-%m-%d @ %H:%M:%S")
+    directory_datetime = MyNow.strftime("%Y-%m-%d@%H-%M-%S")
+    today_directory = gTemporaryDirectory / directory_datetime
     print(f"Report datetime: {report_datetime}")
+    print(f"Today's directory: {today_directory}")
     os.makedirs(today_directory, exist_ok=True)
     print(f"Today's directory created: {today_directory}")
     print()
     
-    download_directory = os.path.join(today_directory, "downloads")
+    download_directory = today_directory / "downloads"
     print(f"Creating download directory: {download_directory}")
     os.makedirs(download_directory, exist_ok=True)
     print(f"Download directory created: {download_directory}")
@@ -2728,10 +2745,10 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     init_boxes(choices, boxes)
 
     if gExportChoicesToCSV:
-        export_choices_to_csv(choices, os.path.join(gTemporaryDirectory, "choices.csv"))
+        export_choices_to_csv(choices, gTemporaryDirectory / "choices.csv")
     
     if gProcessChoicesFromTmp:
-        participant_directory = r"c:\tmp\test\test\test\Participants"
+        participant_directory = Path("c:/tmp/test/test/test/Participants")
         process_choice_files(choices, participant_directory)
 
     # For current debugging prupose, halt script execution here.
@@ -2758,7 +2775,7 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     get_injury_report(choices, download_directory)
 
     # 2026-09-20:DB-Let's try for this year not using Office Pools!
-    # get_officepools_points_from_excel_file(participants, r'c:\Users\DBisson\Downloads\custom.xls')
+    # get_officepools_points_from_excel_file(participants, 'c:/Users/DBisson/Downloads/custom.xls')
 
     validate_choices(choices, participants)
 
@@ -2791,9 +2808,9 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     produce_who_chose_who_grid(report_datetime, gWebDirectory, boxes,choices,participants)
     produce_injury_report_grid(report_datetime, gWebDirectory, choices)
 
-    if USE_ON_LOCAL_WINDOWS:
+    if IS_WINDOWS:
         if gDoAZipAtTheEnd:
-            compress_website_directory(gTemporaryDirectory, os.path.join(today_directory, f'bluberi_pool_{today_string}.zip'))
+            compress_website_directory(gTemporaryDirectory, today_directory / f'bluberi_pool_{today_string}.zip')
 
 if __name__ == "__main__":
     freeze_start = time.perf_counter()   # high‑precision timer
