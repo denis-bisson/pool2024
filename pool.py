@@ -1,3 +1,4 @@
+# from __future__ import annotations
 USE_ON_LOCAL_WINDOWS = False
 
 from operator import index
@@ -26,9 +27,19 @@ if USE_ON_LOCAL_WINDOWS:
     import matplotlib.ticker
 
 gExternalPath = 'https://global6.com/bluberipool/20262027/'
+
+if USE_ON_LOCAL_WINDOWS:
+    gTemporaryDirectory = r'c:\tmp\download'
+    gWebDirectory = r'c:\tmp\web'
+else:
+    gTemporaryDirectory = r'/home/globvcrp/test_python/download'
+    gWebDirectory = r'/home/globvcrp/www/bluberipool/20262027/'
+
+gExportChoicesToCSV = False
 gFlagSelectionGrid = False
 gPlotOfRankingOverTime = False
-gProcessChoixesFromTmp = True
+gProcessChoicesFromTmp = True
+gDoAZipAtTheEnd = False
 
 # https://github.com/Zmalski/NHL-API-Reference?tab=readme-ov-file#get-specific-player-info
 
@@ -134,48 +145,6 @@ class Box:
         self.nb_choices = 0
         self.best_points = 0
         self.worse_points = 0
-
-
-def GeneratePlayersChoices(choices: list) -> None:
-    # Open the file "ChoicesToExtractFrom.txt" per block of 23 lines that will be stored into a list of strings that we will process
-    with open("ChoicesToExtractFrom.txt", 'r', encoding='utf-8') as f:
-        lines = f.readlines()
-
-    # Process the lines in blocks of 23
-    for i in range(0, len(lines), 23):
-        block = lines[i:i + 23]
-        # We isolate the name of the participant.
-        # It will always be in the first line of the block.
-        # It will beggin after the substring " - " and will stop at the character ":"
-        participant_name = block[0].strip().split(" - ")[1].split(":")[0]
-        # print(f"Processing participant: {participant_name }")
-        # We then process the lines 2 to 21 to get the choices.
-        # For each of these lines, the choice begins aften a tab character and ends before on of these two substrings: " (" or ", ".
-        participant_choices = []
-        AllChoices = []
-        for j in range(2, 22):
-            iBox = j - 2
-            line = block[j].strip()
-            if line == "":
-                continue
-            choice = line.split("\t")[1].split(" (")[0].split(", ")[0]
-
-            # We scan each element of the parameter "choices" to find the first one that contains the name of the choice.
-            # Once found, we set the variable "i_found_index" with the position it was found in the list.
-            i_found_index = -1
-            for k, c in enumerate(choices):
-                if c.box_number == iBox and choice in c.name:
-                    i_found_index = k
-                    break
-
-            if i_found_index == -1:
-                raise ValueError(f"The choice {choice} was not found in the list of choices.")
-            else:
-                AllChoices.append(i_found_index)
-
-        # We print the list "AllChoices" with element separated by commas.
-        sStringChoices = ', '.join(str(e) for e in AllChoices)
-        print(f'participants.append(Participant("{participant_name}", [{sStringChoices}], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))')
 
 
 def init_choices(choices: list):
@@ -887,18 +856,30 @@ def get_choices_individual_teams_stats2(choices: List[Choice], download_director
         if choice.box_style == BoxStyle.TBS_TEAM:
             sTeamdID = choice.team_abreviation
             if sTeamdID != "":
-                filename = f"{download_directory}\\choice_{index}_daybyday.json"
+                filename = os.path.join(download_directory, f"choice_{index}_daybyday.json")
                 # if "filename" already exists, we skip the download
                 # Let's check if the file exists
                 if not os.path.exists(filename):
                     #url = f"https://api-web.nhle.com/v1/scoreboard/{sTeamdID}/now"
                     url = f"https://api-web.nhle.com/v1/club-schedule-season/{sTeamdID}/20262027"
-                    response = requests.get(url)
+                    
+                    FlagWeGotAGoodAnswer = False
+
+                    while not FlagWeGotAGoodAnswer:
+                        response = requests.get(url)
+
+                        if "You are being rate limited" in response.text:
+                            print(f"Access restricted by Cloudflare for team ID {sTeamdID} - {choice.name}")
+                            print('We will wait 10 seconds before trying again')
+                            time.sleep(10)
+                        else:
+                            FlagWeGotAGoodAnswer = True
 
                     # Save raw text (JSON) to a file
                     print(f"Saving day by day stats for team ID {sTeamdID} - {choice.name}...")
                     with open(f"{filename}", "w", encoding="utf-8") as f:
                         f.write(response.text)
+                    time.sleep(2)
                 else:
                     print(f"Day by day stats for team ID {sTeamdID} - {choice.name} already exist.")
 
@@ -914,30 +895,53 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
         if (choice.box_style == BoxStyle.TBS_SKATERS) or (choice.box_style == BoxStyle.TBS_GOALIE):
             sPlayerID = choice.nhl_id
             if sPlayerID != "0000000":
-                filename = f"{download_directory}\\choice_{index}.json"
-                # if "filename" already exists, we skip the download
-                # Let's check if the file exists
+                filename = os.path.join(download_directory, f"choice_{index}.json")
+                print(f"Stats JSON Filename {filename}")
                 if not os.path.exists(filename):
                     url = f"https://api-web.nhle.com/v1/player/{sPlayerID}/landing"
-                    response = requests.get(url)
+                    
+                    FlagWeGotAGoodAnswer = False
+
+                    while not FlagWeGotAGoodAnswer:
+                        response = requests.get(url)
+
+                        if "You are being rate limited" in response.text:
+                            print(f"Access restricted by Cloudflare for player ID {sPlayerID} - {choice.name}")
+                            print('We will wait 10 seconds before trying again')
+                            time.sleep(10)
+                        else:
+                            FlagWeGotAGoodAnswer = True
 
                     # Save raw text (JSON) to a file
                     print(f"Saving stats for skater player ID {sPlayerID} - {choice.name}...")
                     with open(f"{filename}", "w", encoding="utf-8") as f:
                         f.write(response.text)
+                    time.sleep(2)
                 else:
                     print(f"Stats for skater player ID {sPlayerID} - {choice.name} already exist.")
 
-                filename_daybyday = f"{download_directory}\\choice_{index}_daybyday.json"
+                filename_daybyday = os.path.join(download_directory, f"choice_{index}_daybyday.json")
+                print(f"Day by day stats JSON Filename {filename_daybyday}")
                 # if "filename_daybyday" already exists, we skip the download
                 if not os.path.exists(filename_daybyday):
                     url_daybyday = f"https://api-web.nhle.com/v1/player/{sPlayerID}/game-log/20262027/2"
-                    response_daybyday = requests.get(url_daybyday)
+                    
+                    FlagWeGotAGoodAnswer_daybyday = False
+                    while not FlagWeGotAGoodAnswer_daybyday:
+                        response_daybyday = requests.get(url_daybyday)
+
+                        if "You are being rate limited" in response_daybyday.text:
+                            print(f"Access restricted by Cloudflare for player ID {sPlayerID} - {choice.name}")
+                            print('We will wait 10 seconds before trying again')
+                            time.sleep(10)
+                        else:
+                            FlagWeGotAGoodAnswer_daybyday = True
 
                     print(f"Saving day by day stats for skater player ID {sPlayerID} - {choice.name}...")
                     # Save raw text (JSON) to a file
                     with open(f"{filename_daybyday}", "w", encoding="utf-8") as f:
                         f.write(response_daybyday.text)
+                    time.sleep(2)
                 else:
                     print(f"Day by day stats for skater player ID {sPlayerID} - {choice.name} already exist.")
 
@@ -986,7 +990,7 @@ def get_choices_skaters_stats2(choices: List[Choice], download_directory: str) -
 
 
 def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> None:
-    filename = f"{download_directory}\\teams_standing.json"
+    filename = os.path.join(download_directory, "teams_standing.json")
 
     # Let's check if the file exists
     if not os.path.exists(filename):
@@ -997,13 +1001,24 @@ def get_choices_teams_stats2(choices: List[Choice], download_directory: str) -> 
         #               Otherwise, we see incomplete standings.
         url = f"https://api-web.nhle.com/v1/standings/now"
         # url = f"https://api-web.nhle.com/v1/standings/2026-09-30"
-        
-        response = requests.get(url)
+    
+        FlagWeGotAGoodAnswer = False
+
+        while not FlagWeGotAGoodAnswer:
+            response = requests.get(url)
+
+            if "You are being rate limited" in response.text:
+                print(f"Access restricted by Cloudflare for teams standings")
+                print('We will wait 10 seconds before trying again')
+                time.sleep(10)
+            else:
+                FlagWeGotAGoodAnswer = True
 
         # Save raw text (JSON) to a file
         with open(f"{filename}", "w", encoding="utf-8") as f:
             f.write(response.text)
         print("Downloaded successfully!")
+        time.sleep(2)
 
     with open(f"{filename}", "r", encoding="utf-8") as f:
         data = json.load(f)
@@ -1029,7 +1044,7 @@ def strip_html_tags(raw_html: str) -> str:
 
 
 def get_injury_report(choices: List[Choice], download_directory: str) -> None:
-    filename = f"{download_directory}\\espn_injuries.html"
+    filename = os.path.join(download_directory, "espn_injuries.html")
 
     if not os.path.exists(filename):
         print()
@@ -1071,7 +1086,7 @@ def get_injury_report(choices: List[Choice], download_directory: str) -> None:
 
 
 def get_officepools_points_manually(participants: List[Participant], download_directory: str) -> None:
-    filename = f"{download_directory}\\officepools_manual.lst"
+    filename = os.path.join(download_directory, "officepools_manual.lst")
     fill_office_points_manually(participants, filename)
 
 def get_officepools_points_from_excel_file(participants: List[Participant], excel_filename: str) -> None:
@@ -1351,20 +1366,23 @@ def copy_required_ressources(for_website_directory: str, param_offices: List[Off
     print()
     print("Copying resource files...")
 
-    shutil.copy(".\\ressources\\bluberi_logo.png", f"{for_website_directory}\\bluberi_logo.png")
-    shutil.copy(".\\ressources\\global6.ico", f"{for_website_directory}\\global6.ico")
+    resources_directory = os.path.dirname(os.path.abspath(__file__))
+    resources_directory = os.path.join(resources_directory, "ressources")
+    print(f"Copying resources from directory {resources_directory}...")
+    shutil.copy(os.path.join(resources_directory, "bluberi_logo.png"), os.path.join(for_website_directory, "bluberi_logo.png"))
+    shutil.copy(os.path.join(resources_directory, "global6.ico"), os.path.join(for_website_directory, "global6.ico"))
 
     for office in param_offices:
-        shutil.copy(f".\\ressources\\{office.icon_filename}", f"{for_website_directory}\\{office.icon_filename.split('\\')[-1]}")
+        shutil.copy(os.path.join(resources_directory, office.icon_filename), os.path.join(for_website_directory, os.path.basename(office.icon_filename)))
 
     for country in param_countries:
-        shutil.copy(f".\\ressources\\{country.icon_filename}", f"{for_website_directory}\\{country.icon_filename.split('\\')[-1]}")
+        shutil.copy(os.path.join(resources_directory, country.icon_filename), os.path.join(for_website_directory, os.path.basename(country.icon_filename)))
 
     print("Resource files copied!")
 
 
 def procedure_css_file(for_website_directory: str) -> None:
-    with open(f"{for_website_directory}\\pool_style.css", 'w', encoding='utf-8', newline='\r\n') as f:
+    with open(os.path.join(for_website_directory, "pool_style.css"), 'w', encoding='utf-8', newline='\r\n') as f:
         f.write("body {\n")
         f.write("  background-color: #ffffff;\n")
         f.write("  font-family: Arial, sans-serif;\n")
@@ -1827,7 +1845,7 @@ def write_header(generation_timestamp: str, f, use_external_path: bool = False, 
 
 def produce_ranking_grid(generation_timestamp: str, for_website_directory: str, participants: List[Participant]) -> None:
     # Let's generate a html file with the results
-    with open(f"{for_website_directory}\\ranking.html", 'w', encoding='utf-8', newline='\r\n') as f:
+    with open(os.path.join(for_website_directory, "ranking.html"), 'w', encoding='utf-8', newline='\r\n') as f:
         # Let's create a table of 20 tables arranged 5 rows of 4 columns
         f.write("<!DOCTYPE html>\n")
         f.write("<html lang=\"en\">\n")
@@ -1896,7 +1914,7 @@ def produce_sex_grid(generation_timestamp: str, for_website_directory: str, part
         print(f"{sex_participant.average_points} - {sex_participant.name}")
 
     # Let's generate a html file with the results
-    with open(f"{for_website_directory}\\gender_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
+    with open(os.path.join(for_website_directory, "gender_stats.html"), 'w', encoding='utf-8', newline='\r\n') as f:
         # Let's create a table of 20 tables arranged 5 rows of 4 columns
         f.write("<!DOCTYPE html>\n")
         f.write("<html lang=\"en\">\n")
@@ -2017,7 +2035,7 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         print(f"{country_participant.average_points} - {country_participant.name}")
 
     # Let's generate a html file with the results
-    with open(f"{for_website_directory}\\country_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
+    with open(os.path.join(for_website_directory, "country_stats.html"), 'w', encoding='utf-8', newline='\r\n') as f:
         # Let's create a table of 20 tables arranged 5 rows of 4 columns
         f.write("<!DOCTYPE html>\n")
         f.write("<html lang=\"en\">\n")
@@ -2181,7 +2199,7 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
         print(f"{float(office_participant.average_points):7.2f} - {office_participant.name}")
 
     # Let's generate a html file with the results
-    with open(f"{for_website_directory}\\office_stats.html", 'w', encoding='utf-8', newline='\r\n') as f:
+    with open(os.path.join(for_website_directory, "office_stats.html"), 'w', encoding='utf-8', newline='\r\n') as f:
         f.write("<!DOCTYPE html>\n")
         f.write("<html lang=\"en\">\n")
         f.write("  <head>\n")
@@ -2266,7 +2284,7 @@ def produce_email_message(generation_timestamp: str, for_website_directory: str,
     email_participants = sorted(participants, key=lambda x: x.total_points, reverse=True)
 
     # Let's generate a html file with the results
-    with open(f"{for_website_directory}\\email_message.html", 'w', encoding='utf-8', newline='\r\n') as f:
+    with open(os.path.join(for_website_directory, "email_message.html"), 'w', encoding='utf-8', newline='\r\n') as f:
         f.write("<!DOCTYPE html>\n")
         f.write("<html lang=\"en\">\n")
         f.write("  <head>\n")
@@ -2325,7 +2343,7 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
     injured_choices = [choice for choice in choices if choice.injury_comment != ""]
     injured_choices.sort(key=lambda choice: locale.strxfrm(choice.name))
 
-    with open(f"{for_website_directory}\\injury_report.html", 'w', encoding='utf-8', newline='\r\n') as f:
+    with open(os.path.join(for_website_directory, "injury_report.html"), 'w', encoding='utf-8', newline='\r\n') as f:
         f.write("<!DOCTYPE html>\n")
         f.write("<html lang=\"en\">\n")
         f.write("  <head>\n")
@@ -2452,7 +2470,7 @@ def write_who_chose_who_box_table(f, box: Box, choices: List[Choice], participan
 
 def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory: str, boxes: List[Box], choices: List[Choice], participants: List[Participant]) -> None:
     # Let's generate a html file showing, for each box, who chose which choice.
-    with open(f"{for_website_directory}\\who_chose_who.html", 'w', encoding='utf-8', newline='\r\n') as f:
+    with open(os.path.join(for_website_directory, "who_chose_who.html"), 'w', encoding='utf-8', newline='\r\n') as f:
         f.write("<!DOCTYPE html>\n")
         f.write("<html lang=\"en\">\n")
         f.write("  <head>\n")
@@ -2478,7 +2496,7 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
 
     # Let's generate one html file per participant, highlighting their own choices.
     for participant in participants:
-        with open(f"{for_website_directory}\\who_chose_who{participant.native_index}.html", 'w', encoding='utf-8', newline='\r\n') as f:
+        with open(os.path.join(for_website_directory, f"who_chose_who{participant.native_index}.html"), 'w', encoding='utf-8', newline='\r\n') as f:
             f.write("<!DOCTYPE html>\n")
             f.write("<html lang=\"en\">\n")
             f.write("  <head>\n")
@@ -2513,7 +2531,7 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
 def produce_personal_grid(generation_timestamp: str, for_website_directory: str, boxes: List[Box], choices: List[Choice], participants: List[Participant]) -> None:
     # Let's generate a html file with the results
     for iParticipantIndex, participant in enumerate(participants):
-        with open(f"{for_website_directory}\\poolparticipant{iParticipantIndex}.html", 'w', encoding='utf-8', newline='\r\n') as f:
+        with open(os.path.join(for_website_directory, f"poolparticipant{iParticipantIndex}.html"), 'w', encoding='utf-8', newline='\r\n') as f:
             # Let's create a table of 20 tables arranged 5 rows of 4 columns
 
             f.write("<!DOCTYPE html>\n")
@@ -2568,9 +2586,9 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                         f.write(f"              <th colspan='3' class={th_class_name}>{boxes[box_number].name}</th>\n")
                     else:
                         if (boxes[box_number].box_style == BoxStyle.TBS_TEAM) or (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
-                            f.write(f"              <th colspan='5' class={th_class_name}>{boxes[box_number].name}</th>\n")
+                            f.write(f"              <th colspan='4' class={th_class_name}>{boxes[box_number].name}</th>\n")
                         if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
-                            f.write(f"              <th colspan='6' class={th_class_name}>{boxes[box_number].name}</th>\n")
+                            f.write(f"              <th colspan='5' class={th_class_name}>{boxes[box_number].name}</th>\n")
                     f.write(f"            </tr>\n")
 
                     f.write(f'            <tr class={"participant_choice_normal"}>\n')
@@ -2580,8 +2598,8 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                             f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
                             f.write(f"              <td style=\"text-align: center;\">W</td>\n")
                             f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
-                        if gFlagSelectionGrid:
+                        else:
+                            f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
                             f.write(f"              <td style=\"text-align: center;\">\"X\"</td>\n")
 
                     if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
@@ -2591,8 +2609,8 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                             f.write(f"              <td style=\"text-align: center;\">G</td>\n")
                             f.write(f"              <td style=\"text-align: center;\">A</td>\n")
                             f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
-                        if gFlagSelectionGrid:
+                        else:
+                            f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
                             f.write(f"              <td style=\"text-align: center;\">\"X\"</td>\n")
 
                     if (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
@@ -2601,8 +2619,8 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                             f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
                             f.write(f"              <td style=\"text-align: center;\">W</td>\n")
                             f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
-                        f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
-                        if gFlagSelectionGrid:
+                        else:
+                            f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
                             f.write(f"              <td style=\"text-align: center;\">\"X\"</td>\n")
                     f.write(f"            </tr>\n")
 
@@ -2638,17 +2656,17 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
 
                             if not gFlagSelectionGrid:
                                 if (boxes[box_number].box_style == BoxStyle.TBS_TEAM) or (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
-                                    f.write(f"              <td style=\"text-align: right;\">{choice.nb_gameplayed}&nbsp;</td>\n")  
-                                    f.write(f"              <td style=\"text-align: right;\">{choice.nb_wins}&nbsp;</td>\n")
+                                    f.write(f"              <td style=\"text-align: center;\">{choice.nb_gameplayed}&nbsp;</td>\n")  
+                                    f.write(f"              <td style=\"text-align: center;\">{choice.nb_wins}&nbsp;</td>\n")
                                 if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
-                                    f.write(f"              <td style=\"text-align: right;\">{choice.nb_gameplayed}&nbsp;</td>\n")  
-                                    f.write(f"              <td style=\"text-align: right;\">{choice.nb_goals}&nbsp;</td>\n")
-                                    f.write(f"              <td style=\"text-align: right;\">{choice.nb_assists}&nbsp;</td>\n")
-                                f.write(f"              <td style=\"text-align: right;\">{choice.nb_points}&nbsp;</td>\n")
+                                    f.write(f"              <td style=\"text-align: center;\">{choice.nb_gameplayed}&nbsp;</td>\n")  
+                                    f.write(f"              <td style=\"text-align: center;\">{choice.nb_goals}&nbsp;</td>\n")
+                                    f.write(f"              <td style=\"text-align: center;\">{choice.nb_assists}&nbsp;</td>\n")
+                                f.write(f"              <td style=\"text-align: center;\">{choice.nb_points}&nbsp;</td>\n")
 
                             # Write the average under with two decimals after the point of choice.nb_points over choice.nb_gameplayed
-                            f.write(f"              <td style=\"text-align: right;\">{(choice.nb_points / choice.nb_gameplayed) if choice.nb_gameplayed > 0 else 0:.2f}&nbsp;</td>\n")
                             if gFlagSelectionGrid:
+                                f.write(f"              <td style=\"text-align: center;\">{(choice.nb_points / choice.nb_gameplayed) if choice.nb_gameplayed > 0 else 0:.2f}&nbsp;</td>\n")
                                 f.write(f"              <td style=\"text-align: center;\">&nbsp;&nbsp;</td>\n")
                             f.write(f"            </tr>\n")
                         else:
@@ -2678,33 +2696,43 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
 
 
 def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
-    global gProcessChoixesFromTmp
+    global gProcessChoicesFromTmp
 
-    today_string = datetime.date.today().strftime("%Y-%m-%d")
-    today_directory = f'.\\{today_string}'
+    print(f"Temporary directory: {gTemporaryDirectory}")
+    print()
 
     # Let's set a variable of type string of the format YYYY-MM-DD @ hh:mm
-    now = datetime.datetime.now()
-    report_datetime = now.strftime("%Y-%m-%d @ %H:%M")
-
+    MyNow = datetime.datetime.now()
+    report_datetime = MyNow.strftime("%Y-%m-%d @ %H:%M")
+    today_directory = os.path.join(gTemporaryDirectory, report_datetime)
+    print(f"Report datetime: {report_datetime}")
     os.makedirs(today_directory, exist_ok=True)
+    print(f"Today's directory created: {today_directory}")
+    print()
+    
     download_directory = os.path.join(today_directory, "downloads")
+    print(f"Creating download directory: {download_directory}")
     os.makedirs(download_directory, exist_ok=True)
-    for_website_directory = os.path.join(today_directory, "for_website")
-    os.makedirs(for_website_directory, exist_ok=True)
+    print(f"Download directory created: {download_directory}")
+    print()
+
+    print(f"Creating for website directory: {gWebDirectory}")
+    os.makedirs(gWebDirectory, exist_ok=True)
+    print(f"For website directory created: {gWebDirectory}")
+    print()
 
     choices = []
     init_choices(choices)
 
-    # We want to generate the players choices only once at the begining of the season, from OfficePools report, we call this function and it will generate the choies.
-    # GeneratePlayersChoices(choices)
-    # sys.exit(0)
-
     boxes = []
     init_boxes(choices, boxes)
-    export_choices_to_csv(choices, os.path.join(for_website_directory, "choices.csv"))
-    if gProcessChoixesFromTmp:
-        process_choice_files(choices, r'c:\tmp\Participants')
+
+    if gExportChoicesToCSV:
+        export_choices_to_csv(choices, os.path.join(gTemporaryDirectory, "choices.csv"))
+    
+    if gProcessChoicesFromTmp:
+        participant_directory = r"c:\tmp\test\test\test\Participants"
+        process_choice_files(choices, participant_directory)
 
     # For current debugging prupose, halt script execution here.
     # sys.exit(0)
@@ -2750,27 +2778,27 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
 
     # 2026-09-20:DB-For the moment, no graph with evolution.
     if gPlotOfRankingOverTime:
-        plot_rankings_over_time(participants, for_website_directory)
+        plot_rankings_over_time(participants, gWebDirectory)
 
-    copy_required_ressources(for_website_directory, offices, countries)
-    procedure_css_file(for_website_directory)
-    produce_personal_grid(report_datetime, for_website_directory, boxes, choices, participants)
-    produce_ranking_grid(report_datetime, for_website_directory, participants)
-    produce_sex_grid(report_datetime, for_website_directory, participants)
-    produce_country_grid(report_datetime, for_website_directory, participants, countries)
-    produce_office_grid(report_datetime, for_website_directory, participants, offices)
-    produce_email_message(report_datetime, for_website_directory, participants, offices)
-    produce_who_chose_who_grid(report_datetime, for_website_directory, boxes,choices,participants)
-    produce_injury_report_grid(report_datetime, for_website_directory, choices)
+    copy_required_ressources(gWebDirectory, offices, countries)
+    procedure_css_file(gWebDirectory)
+    produce_personal_grid(report_datetime, gWebDirectory, boxes, choices, participants)
+    produce_ranking_grid(report_datetime, gWebDirectory, participants)
+    produce_sex_grid(report_datetime, gWebDirectory, participants)
+    produce_country_grid(report_datetime, gWebDirectory, participants, countries)
+    produce_office_grid(report_datetime, gWebDirectory, participants, offices)
+    produce_email_message(report_datetime, gWebDirectory, participants, offices)
+    produce_who_chose_who_grid(report_datetime, gWebDirectory, boxes,choices,participants)
+    produce_injury_report_grid(report_datetime, gWebDirectory, choices)
 
     if USE_ON_LOCAL_WINDOWS:
-        compress_website_directory(for_website_directory, f'c:\\tmp\\bluberi_pool_{today_string}.zip')
+        if gDoAZipAtTheEnd:
+            compress_website_directory(gTemporaryDirectory, os.path.join(today_directory, f'bluberi_pool_{today_string}.zip'))
 
 if __name__ == "__main__":
     freeze_start = time.perf_counter()   # high‑precision timer
 
-    # Set the locale to French
-    locale.setlocale(locale.LC_ALL, 'fr_FR.UTF-8')
+    locale.setlocale(locale.LC_ALL, '')
 
     print('----------------------------------')
     print('BLUBERI POOL GENERATOR - ver 1.1.0')
