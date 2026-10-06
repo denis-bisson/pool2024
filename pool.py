@@ -486,7 +486,7 @@ def init_participants(participants: list) -> None:
     participants.append(Participant("Éric Colgan", [1,8,16,19,28,31,40,47,49,59,61,68,77,80,88,94,101,103,110,115,124,131,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
     participants.append(Participant("Eric Loat", [1,8,13,22,28,30,41,45,49,54,62,71,73,83,89,94,101,103,112,119,122,130,134,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
     participants.append(Participant("Erick James", [5,8,12,22,27,33,36,42,48,54,62,71,73,78,84,90,101,103,109,116,121,130,136,138], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
-    participants.append(Participant("Erick Ndjomo", [0,6,14,23,28,35,36,43,50,56,61,71,76,78,87,91,100,103,109,116,121,126,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
+    participants.append(Participant("Erick Ndjomo", [0,6,14,23,28,35,36,43,50,56,61,71,76,78,87,91,101,103,109,116,121,126,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
     participants.append(Participant("François Désilets", [5,9,12,20,28,30,38,45,49,54,62,68,73,78,87,91,101,105,110,116,125,128,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
     participants.append(Participant("François Hébert", [1,6,16,19,26,32,38,45,49,54,61,71,76,78,88,94,101,103,108,115,121,127,136,141], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
     participants.append(Participant("François Leger", [0,11,17,22,28,33,38,42,50,59,65,66,75,78,87,94,101,106,112,115,122,130,137,143], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON))
