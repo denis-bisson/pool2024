@@ -1180,10 +1180,22 @@ def get_injury_report(choices: List[Choice], download_directory: str) -> None:
             continue
 
         player_name = cells[0]
+        estimated_return = cells[2] 
         status = cells[3]
         comment = cells[4] if len(cells) >= 5 else ""
 
-        injury_comment = f"{status} - {comment}" if comment else status
+        # Construct the injury comment based on the "status", "comment" and "estimated return" fields,
+        injury_comment_parts = []
+        if comment:
+            if "ir-nr" not in comment.lower():
+                injury_comment_parts.append(f"{comment}")
+        if status:
+            injury_comment_parts.append(f"{status}")
+        if estimated_return:
+            injury_comment_parts.append(f"Estimated Return: {estimated_return}")
+
+        injury_comment = "<BR>".join(injury_comment_parts)
+
 
         for choice in choices:
             if choice.box_style in (BoxStyle.TBS_SKATERS, BoxStyle.TBS_GOALIE) and choice.name.lower() == player_name.lower():
@@ -1597,21 +1609,6 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("}\n")
         f.write("\n")
 
-        # f.write(".outer-table {\n")
-        # f.write("    width: 100%;\n")
-        # f.write("    table-layout: fixed;\n")
-        # f.write("}\n")
-
-        # f.write(".outer-table th,\n")
-        # f.write(".outer-table td {\n")
-        # f.write("    width: 25%;\n")
-        # f.write("  background-color: darkblue;\n")
-        # f.write("  color: #ffffff;\n")
-        # f.write("  font-size: 20px;\n")
-        # f.write("  font-weight: bold;\n")
-        # f.write("  text-align: center;\n")
-        # f.write("}        \n")
-
         f.write(".inner-table {\n")
         f.write(" table-layout: fixed;\n")
         f.write(" border: 1px solid silver;\n")
@@ -1784,7 +1781,7 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".row_even {\n")
-        f.write("  background-color: #f0f0f0;\n")
+        f.write("  background-color: #d0d0d0;\n")
         f.write("}\n")
         f.write("\n")
 
@@ -1815,6 +1812,8 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".who-chose-table {\n")
+        f.write(" border: 3px solid black;\n")
+        f.write(" border-collapse: collapse;\n")
         f.write("  width: 1080px;\n")
         f.write("  table-layout: fixed;\n")
         f.write("}\n")
@@ -2121,16 +2120,16 @@ def produce_sex_grid(generation_timestamp: str, for_website_directory: str, part
 
 
 def write_ranking_country_table(f, participants: List[Participant], country: CountryData) -> None:
-    f.write("     <table class=\"ranking-table\">\n")
+    f.write("     <table class=\"outer-table\">\n")
 
     f.write("       <tr>\n")
     f.write(f"         <th colspan=\"3\" class=\"colspan-3\"><img src=\"{country.icon_filename}\" alt=\"{country.name}\">&nbsp;{country.name}&nbsp;<img src=\"{country.icon_filename}\" alt=\"{country.name}\"></th>\n")
     f.write("       </tr>            \n")
 
     f.write("       <tr>\n")
-    f.write("         <th class=\"ranking_header\">Rank</th>\n")
-    f.write("         <th class=\"ranking_header\">Name</th>\n")
-    f.write("         <th class=\"ranking_header\">Total Points</th>\n")
+    f.write("         <th class=\"participant_header_row\">Rank</th>\n")
+    f.write("         <th class=\"participant_header_row\">Name</th>\n")
+    f.write("         <th class=\"participant_header_row\">Total Points</th>\n")
     f.write("       </tr>\n")
 
     sorted_participants = sorted(participants, key=lambda x: x.total_points, reverse=True)
@@ -2210,17 +2209,17 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         write_header(generation_timestamp, f)
 
         # Let's create a table with three elements
-        f.write("     <table class=\"ranking-table\">\n")
+        f.write("     <table class=\"outer-table\">\n")
 
         f.write("       <tr>\n")
         f.write(f"         <th colspan=\"4\" class=\"colspan-4\">Stats by Country</th>\n")
         f.write("       </tr>\n")
 
         f.write("       <tr>\n")
-        f.write("         <th class=\"ranking_header\">Rank</th>\n")
-        f.write("         <th class=\"ranking_header\">Country</th>\n")
-        f.write("         <th class=\"ranking_header\">Participants</th>\n")
-        f.write("         <th class=\"ranking_header\">Average</th>\n")
+        f.write("         <th class=\"participant_header_row\">Rank</th>\n")
+        f.write("         <th class=\"participant_header_row\">Country</th>\n")
+        f.write("         <th class=\"participant_header_row\">Participants</th>\n")
+        f.write("         <th class=\"participant_header_row\">Average</th>\n")
         f.write("       </tr>\n")
 
         row_color = "row_odd"
@@ -2283,7 +2282,7 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
 
 
 def write_ranking_office_table(f, participants: List[Participant], office: OfficeData) -> None:
-    f.write("     <table class=\"ranking-table\">\n")
+    f.write("     <table class=\"outer-table\">\n")
 
     f.write("       <tr>\n")
     f.write(f"       <th colspan=\"3\" class=\"colspan-3\">\n")
@@ -2292,9 +2291,9 @@ def write_ranking_office_table(f, participants: List[Participant], office: Offic
     f.write("       </tr>\n")
 
     f.write("       <tr>\n")
-    f.write("         <th class=\"ranking_header\">Rank</th>\n")
-    f.write("         <th class=\"ranking_header\">Name</th>\n")
-    f.write("         <th class=\"ranking_header\">Total Points</th>\n")
+    f.write("         <th class=\"participant_header_row\">Rank</th>\n")
+    f.write("         <th class=\"participant_header_row\">Name</th>\n")
+    f.write("         <th class=\"participant_header_row\">Total Points</th>\n")
     f.write("       </tr>\n")
 
     sorted_participants = sorted(participants, key=lambda x: x.total_points, reverse=True)
@@ -2373,17 +2372,17 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
         write_header(generation_timestamp, f)
 
         # Let's create a table with three elements
-        f.write("     <table class=\"ranking-table\">\n")
+        f.write("     <table class=\"outer-table\">\n")
 
         f.write("       <tr>\n")
         f.write(f"         <th colspan=\"4\" class=\"colspan-4\">Stats by Offices</th>\n")
         f.write("       </tr>\n")
 
         f.write("       <tr>\n")
-        f.write("         <th class=\"ranking_header\">Rank</th>\n")
-        f.write("         <th class=\"ranking_header\">Office</th>\n")
-        f.write("         <th class=\"ranking_header\">Participants</th>\n")
-        f.write("         <th class=\"ranking_header\">Average</th>\n")
+        f.write("         <th class=\"participant_header_row\">Rank</th>\n")
+        f.write("         <th class=\"participant_header_row\">Office</th>\n")
+        f.write("         <th class=\"participant_header_row\">Participants</th>\n")
+        f.write("         <th class=\"participant_header_row\">Average</th>\n")
         f.write("       </tr>\n")
 
         row_color = "row_odd"
@@ -2516,20 +2515,21 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
 
         write_header(generation_timestamp, f)
 
+        # Write the source of the injury reports which is "https://www.espn.com/nhl/injuries"
+        f.write("     <p>Source: <a href=\"https://www.espn.com/nhl/injuries\" target=\"_blank\">ESPN NHL Injuries</a></p>\n")
+
         f.write("     <table class=\"outer-table\" border='0' style=\"width: 700px;\">\n")
         f.write("<colgroup>\n")
-        f.write("<col style=\"width:25%;\">\n")
-        f.write("<col style=\"width:15%;\">\n")
-        f.write("<col style=\"width:60%;\">\n")
+        f.write("<col style=\"width:35%;\">\n")
+        f.write("<col style=\"width:65%;\">\n")
         f.write("</colgroup>\n")
 
         f.write("       <tr>\n")
-        f.write("         <th colspan=\"3\" class=\"colspan-3\">Injury Reports</th>\n")
+        f.write("         <th colspan=\"2\" class=\"colspan-3\">Injury Reports</th>\n")
         f.write("       </tr>\n")
 
         f.write("       <tr>\n")
         f.write("         <th class=\"participant_header_row\">Player</th>\n")
-        f.write("         <th class=\"participant_header_row\">Team</th>\n")
         f.write("         <th class=\"participant_header_row\">Status / Comment</th>\n")
         f.write("       </tr>\n")
 
@@ -2541,7 +2541,7 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
             row_color = "row_even" if row_color == "row_odd" else "row_odd"
 
             f.write(f"       <tr class=\"{row_color}\" style=\"font-weight: bold;\">\n")
-            f.write(f"         <td>{choice.name}</td>\n")
+#           f.write(f"         <td>{choice.name}</td>\n")
             team = html.escape(choice.team_abreviation)
             logo = (
                 f'<img src="{team}.svg" alt="{team}" '
@@ -2551,9 +2551,9 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
             f.write(
                 f'         <td><div style="display: flex; align-items: center; position: relative; '
                 f'padding-left: {padding_left}px; min-height: 28px;">'
-                f'{logo}<span>{team}</span></div></td>\n'
+                f'{logo}<span>{choice.name}</span></div></td>\n'
             )
-            f.write(f"         <td>{choice.injury_comment}</td>\n")
+            f.write(f"          <td style=\"font-weight: normal;\">{choice.injury_comment}</td>\n")
             f.write("       </tr>\n")
 
         f.write("     </table>\n")
@@ -2565,7 +2565,7 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
 
 
 def write_who_chose_who_box_table(f, box: Box, choices: List[Choice], participants: List[Participant], owner_participant: "Participant | None" = None) -> None:
-    f.write("     <table class=\"ranking-table who-chose-table\">\n")
+    f.write("     <table class=\"who-chose-table\">\n")
 
     # table-layout:fixed derives column widths from the first row, so an explicit colgroup is required.
     f.write("       <colgroup>\n")
@@ -2576,14 +2576,14 @@ def write_who_chose_who_box_table(f, box: Box, choices: List[Choice], participan
     f.write("       </colgroup>\n")
 
     f.write("       <tr>\n")
-    f.write(f"         <th colspan=\"4\" class=\"colspan-4\">{box.name}</th>\n")
+    f.write(f"         <th colspan=\"4\" class=\"box_header_normal\">{box.name}</th>\n")
     f.write("       </tr>\n")
 
     f.write("       <tr>\n")
-    f.write("         <th class=\"ranking_header col-choice\">Choice</th>\n")
-    f.write("         <th class=\"ranking_header col-points\">Points</th>\n")
-    f.write("         <th class=\"ranking_header col-nb\">Nb</th>\n")
-    f.write("         <th class=\"ranking_header col-participants\">Participants</th>\n")
+    f.write("         <th class=\"participant_header_row\">Choice</th>\n")
+    f.write("         <th class=\"participant_header_row\">Points</th>\n")
+    f.write("         <th class=\"participant_header_row\">Nb</th>\n")
+    f.write("         <th class=\"participant_header_row\">Participants</th>\n")
     f.write("       </tr>\n")
 
     row_color = "row_odd"
@@ -2669,7 +2669,7 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
         f.write("</html>\n")
 
     # Let's generate one html file per participant, highlighting their own choices.
-    for participant in participants:
+    for iParticipantIndex, participant in enumerate(participants):
         with open(os.path.join(for_website_directory, f"who_chose_who{participant.native_index}.html"), 'w', encoding='utf-8', newline='\r\n') as f:
             f.write("<!DOCTYPE html>\n")
             f.write("<html lang=\"en\">\n")
@@ -2687,7 +2687,12 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
 
             f.write("     <table class=\"ranking-table who-chose-table\">\n")
             f.write("       <tr>\n")
-            f.write(f"         <th colspan=\"4\" class=\"colspan-4\">{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points</th>\n")
+
+            header_line = f"{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points"
+            header_line += f" - <a class=\"other_format\" href=\"poolparticipantchoices{iParticipantIndex}.html\">Just Choices</a>"
+            header_line += f" - <a class=\"other_format\" href=\"poolparticipant{iParticipantIndex}.html\">Grid's choices</a>"
+
+            f.write(f"         <th colspan=\"4\" class=\"colspan-4\">{header_line}</th>\n")
             f.write("       </tr>\n")
             f.write("     </table>\n")
             f.write("<BR>\n")
