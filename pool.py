@@ -15,9 +15,8 @@ import itertools
 import time
 import os
 import sys
-from random import choices
-from operator import index
 import platform
+
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX = platform.system() == "Linux"
 
@@ -1567,6 +1566,12 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("}\n")
         f.write("\n")
 
+        f.write(".participant_choice_black_normal {\n")
+        f.write("  color: black;\n")
+        f.write("  font-weight: bold;\n")
+        f.write("}\n")
+        f.write("\n")
+
         f.write(".participant_choice_dropped {\n")
         f.write("  background-color: #e0e0e0;\n")
         f.write("  color: #808080;\n")
@@ -2511,7 +2516,12 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
 
         write_header(generation_timestamp, f)
 
-        f.write("     <table class=\"outer-table\">\n")
+        f.write("     <table class=\"outer-table\" border='0' style=\"width: 700px;\">\n")
+        f.write("<colgroup>\n")
+        f.write("<col style=\"width:25%;\">\n")
+        f.write("<col style=\"width:15%;\">\n")
+        f.write("<col style=\"width:60%;\">\n")
+        f.write("</colgroup>\n")
 
         f.write("       <tr>\n")
         f.write("         <th colspan=\"3\" class=\"colspan-3\">Injury Reports</th>\n")
@@ -2524,13 +2534,25 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
         f.write("       </tr>\n")
 
         row_color = "row_odd"
+        logo_size = 48
+        padding_left = logo_size + 4
 
         for choice in injured_choices:
             row_color = "row_even" if row_color == "row_odd" else "row_odd"
 
-            f.write(f"       <tr class=\"{row_color}\">\n")
+            f.write(f"       <tr class=\"{row_color}\" style=\"font-weight: bold;\">\n")
             f.write(f"         <td>{choice.name}</td>\n")
-            f.write(f"         <td class=\"just_center\">{choice.team_abreviation}</td>\n")
+            team = html.escape(choice.team_abreviation)
+            logo = (
+                f'<img src="{team}.svg" alt="{team}" '
+                f'style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); '
+                f'width: {logo_size}px; height: {logo_size}px; object-fit: contain;">'
+            )
+            f.write(
+                f'         <td><div style="display: flex; align-items: center; position: relative; '
+                f'padding-left: {padding_left}px; min-height: 28px;">'
+                f'{logo}<span>{team}</span></div></td>\n'
+            )
             f.write(f"         <td>{choice.injury_comment}</td>\n")
             f.write("       </tr>\n")
 
@@ -2745,6 +2767,7 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
                 # f.write("       </tr>\n")
 
 
+                injured_size = 32 # Set desired injured icon display size in pixels (e.g., 40, 48, 56)
                 logo_size = 48  # Set desired logo display size in pixels (e.g., 40, 48, 56)
                 padding_left = logo_size + 4  # Generates spacing so text isn't overlapped
 
@@ -2758,10 +2781,21 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
                     f'width: {logo_size}px; height: {logo_size}px; object-fit: contain;">'
                 )
 
+                # An injured player gets the injured.svg icon (same size as the team logo) before the name;
+                # otherwise an empty spacer of the same width keeps all the names aligned.
+
+                if choice.injury_comment:
+                    injured_slot = (
+                        f'<a href="injury_report.html"><img src="injured.svg" alt="Injured" title="{html.escape(choice.injury_comment)}" '
+                        f'style="width: {injured_size}px; height: {injured_size}px; object-fit: contain; flex: 0 0 {injured_size}px; margin-right: 4px;"></a>'
+                    )
+                else:
+                    injured_slot = f'<span style="display: inline-block; width: {injured_size}px; flex: 0 0 {injured_size}px; margin-right: 4px;"></span>'
+
                 f.write(
                     f'          <td><div style="display: flex; align-items: center; position: relative; '
                     f'padding-left: {padding_left}px; min-height: 28px;">'
-                    f'{logo}<span>{html.escape(choice.name)}</span></div></td>\n'
+                    f'{logo}{injured_slot}<span>{html.escape(choice.name)}</span></div></td>\n'
                 )
 
                 f.write(f"          <td {center}>{choice.nb_gameplayed}</td>\n")
