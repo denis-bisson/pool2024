@@ -1530,8 +1530,8 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".participant_header_row {\n")
-        f.write("  background-color: #DCE3EA;\n")
-        f.write("  color: #000000;\n")
+        f.write("  background-color: #FFCC80;\n")
+        f.write("  color: #4E342E;\n")
         f.write("  font-weight: bold;\n")
         f.write("  border-bottom: 1px solid silver;\n")
         f.write("}\n")
@@ -1848,6 +1848,18 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("}\n")
         f.write("\n")
 
+        f.write(".other_format, .other_format:visited {\n")
+        f.write("  color: yellow;\n")
+        f.write("  text-decoration: underline;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".other_format:hover, .other_format:visited:hover {\n")
+        f.write("  color: #38BDF8;\n")
+        f.write("  text-decoration: none;\n")
+        f.write("}\n")
+        f.write("\n")        
+
         f.write(".who-chose-own-participant {\n")
         f.write("  font-weight: bold;\n")
         f.write("  color: navy;\n")
@@ -1869,9 +1881,9 @@ def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool
     f.write("       </tr>            \n")
 
     f.write("       <tr>\n")
-    f.write("         <th class=\"ranking_header\">Rank</th>\n")
-    f.write("         <th class=\"ranking_header\">Name</th>\n")
-    f.write("         <th class=\"ranking_header\">Total Points</th>\n")
+    f.write("         <th class=\"participant_header_row\">Rank</th>\n")
+    f.write("         <th class=\"participant_header_row\">Name</th>\n")
+    f.write("         <th class=\"participant_header_row\">Total Points</th>\n")
     f.write("       </tr>\n")
 
     if sorted_by_rank:
@@ -1893,14 +1905,19 @@ def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool
 
         f.write(f"       <tr class=\"{row_color}\">\n")
         f.write(f"         <td class=\"just_center\">{participant.rank}</td>\n")
-        f.write(f"         <td><a href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
-        f.write(f"         <td class=\"just_center\">{participant.total_points}</td>\n")
+        f.write(f"         <td><a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
+        f.write(f"         <td class=\"just_center\"><a class=\"participant-hover-link\" href=\"poolparticipantchoices{participant.native_index}.html\">{participant.total_points}</a></td>\n")
         f.write("       </tr>\n")
 
     f.write("     </table>\n")
 
 
 def write_footer(generation_timestamp: str, f, use_external_path: bool = False, participant_native_index: "int | None" = None) -> None:
+    if use_external_path:
+        sub_path = gExternalPath
+    else:
+        sub_path = ""
+
     if participant_native_index is not None:
         who_chose_who_link = f"who_chose_who{participant_native_index}.html"
     else:
@@ -1914,13 +1931,15 @@ def write_footer(generation_timestamp: str, f, use_external_path: bool = False, 
     f.write("  </td>\n")
 
     f.write("  <td>\n")
-    f.write(f"<a href=\"{gExternalPath}ranking.html\">Ranking</a>\n")
+    f.write(f"<a href=\"{sub_path}ranking.html\">Ranking</a>\n")
     f.write("&nbsp;")
-    f.write(f"<a href=\"{gExternalPath}country_stats.html\">CANADA vs USA</a>\n")
+    f.write(f"<a href=\"{sub_path}country_stats.html\">CANADA vs USA</a>\n")
     f.write("&nbsp;")
-    f.write(f"<a href=\"{gExternalPath}office_stats.html\">Bluberi Offices</a>\n")
+    f.write(f"<a href=\"{sub_path}office_stats.html\">Bluberi Offices</a>\n")
     f.write("&nbsp;")
-    f.write(f"<a href=\"{gExternalPath}{who_chose_who_link}\">Who Selected Who</a>\n")
+    f.write(f"<a href=\"{sub_path}{who_chose_who_link}\">Who Selected Who</a>\n")
+    f.write("&nbsp;")
+    f.write(f"<a href=\"{sub_path}injury_report.html\">Injuries</a>\n")
     # f.write("&nbsp;")
     # f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026\" target=\"officepools\">OfficePools</a>\n")
     f.write("  </td>\n")
@@ -1966,6 +1985,8 @@ def write_header(generation_timestamp: str, f, use_external_path: bool = False, 
     f.write(f"<a href=\"{sub_path}office_stats.html\">Bluberi Offices</a>\n")
     f.write("&nbsp;")
     f.write(f"<a href=\"{sub_path}{who_chose_who_link}\">Who Selected Who</a>\n")
+    f.write("&nbsp;")
+    f.write(f"<a href=\"{sub_path}injury_report.html\">Injuries</a>\n")
     # f.write("&nbsp;")
     # f.write("<a href=\"https://www.officepools.com/nhl/classic/auth/2025/regular/Bluberi2026/Bluberi2026\" target=\"officepools\">OfficePools</a>\n")
     f.write("  </td>\n")
@@ -2125,8 +2146,8 @@ def write_ranking_country_table(f, participants: List[Participant], country: Cou
 
         f.write(f"       <tr class=\"{row_color}\">\n")
         f.write(f"         <td class=\"just_center\">{participant.rank}</td>\n")
-        f.write(f"         <td><a href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
-        f.write(f"         <td class=\"just_center\">{participant.total_points}</td>\n")
+        f.write(f"         <td><a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
+        f.write(f"         <td class=\"just_center\"><a class=\"participant-hover-link\" href=\"poolparticipantchoices{participant.native_index}.html\">{participant.total_points}</a></td>\n")
         f.write("       </tr>\n")
 
     f.write("     </table>\n")
@@ -2289,8 +2310,8 @@ def write_ranking_office_table(f, participants: List[Participant], office: Offic
 
         f.write(f"       <tr class=\"{row_color}\">\n")
         f.write(f"         <td class=\"just_center\">{participant.rank}</td>\n")
-        f.write(f"         <td><a href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
-        f.write(f"         <td class=\"just_center\">{participant.total_points}</td>\n")
+        f.write(f"         <td><a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
+        f.write(f"         <td class=\"just_center\"><a class=\"participant-hover-link\" href=\"poolparticipantchoices{participant.native_index}.html\">{participant.total_points}</a></td>\n")
         f.write("       </tr>\n")
 
     f.write("     </table>\n")
@@ -2490,16 +2511,16 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
 
         write_header(generation_timestamp, f)
 
-        f.write("     <table class=\"ranking-table\">\n")
+        f.write("     <table class=\"outer-table\">\n")
 
         f.write("       <tr>\n")
         f.write("         <th colspan=\"3\" class=\"colspan-3\">Injury Reports</th>\n")
         f.write("       </tr>\n")
 
         f.write("       <tr>\n")
-        f.write("         <th class=\"ranking_header\">Player</th>\n")
-        f.write("         <th class=\"ranking_header\">Team</th>\n")
-        f.write("         <th class=\"ranking_header\">Status / Comment</th>\n")
+        f.write("         <th class=\"participant_header_row\">Player</th>\n")
+        f.write("         <th class=\"participant_header_row\">Team</th>\n")
+        f.write("         <th class=\"participant_header_row\">Status / Comment</th>\n")
         f.write("       </tr>\n")
 
         row_color = "row_odd"
@@ -2564,10 +2585,11 @@ def write_who_chose_who_box_table(f, box: Box, choices: List[Choice], participan
 
         chosen_by_links = []
         for participant in chosen_by:
-            link = f"<a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.rank}-{participant.name}</a>"
+            link_grid = f"<a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.rank}-{participant.name}</a>"
+            link_choice = f"<a class=\"participant-hover-link\" href=\"poolparticipantchoices{participant.native_index}.html\">{participant.total_points}</a>"
             if owner_participant is not None and participant is owner_participant:
-                link = f"<span class=\"who-chose-own-participant\">{link}</span>"
-            chosen_by_links.append(link)
+                link_grid = f"<span class=\"who-chose-own-participant\">{link_grid}</span>"
+            chosen_by_links.append(f"{link_grid} ({link_choice})")
 
         if owner_participant is not None:
             if owner_participant.choices[choice.box_number] == choice_index:
@@ -2675,7 +2697,9 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
             write_header(generation_timestamp, f, participant_native_index=participant.native_index)
 
             header_line = f"{ordinal(participant.rank)} - {html.escape(participant.name)} - {participant.total_points} points"
-            f.write("     <table class=\"inner-table\" border='0' style=\"width: 700px;\">\n")
+            header_line += f" - <a class=\"other_format\" href=\"poolparticipant{iParticipantIndex}.html\">Grid's choices</a>"
+#           f.write("     <table class=\"inner-table\" border='0' style=\"width: 700px;\">\n")
+            f.write("     <table class=\"outer-table\" border='0' style=\"width: 700px;\">\n")
             f.write("<colgroup>\n")
             f.write("<col style=\"width:8%;\">\n")
             f.write("<col> <!-- takes all remaining space -->\n")
@@ -2685,7 +2709,7 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
             f.write("<col style=\"width:8%;\">\n")
             f.write("<col style=\"width:10%;\">\n")
             f.write("</colgroup>\n")
-            f.write(f"       <tr><th colspan=\"7\" class=\"box_header_normal\">{header_line}</th></tr>\n")
+            f.write(f"       <tr><th colspan=\"7\" class=\"colspan-3\">{header_line}</th></tr>\n")
             f.write("       <tr class=\"participant_header_row\">\n")
             for title in ("Box", "Choice", "GP", "W", "G", "A", "Pts"):
                 f.write(f"         <td {center}>{title}</td>\n")
@@ -2800,6 +2824,7 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                 header_line = 'Grille de Sélection / Selection Grid'
             else:
                 header_line = f"{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points"
+                header_line += f" - <a class=\"other_format\" href=\"poolparticipantchoices{iParticipantIndex}.html\">Just Choices</a>"
 
             f.write("       <tr>\n")
             f.write(f"         <th colspan=\"{NumberOfRow}\" class=\"colspan-{NumberOfRow}\">{header_line}</th>\n")
@@ -2807,7 +2832,6 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
 
             for i in range(8):
                 f.write("      <tr>\n")
-                # max_choices = max(boxes[i*NumberOfRow].nb_choices, boxes[i*NumberOfRow+1].nb_choices, boxes[i*NumberOfRow+2].nb_choices)
                 max_choices = 6
                 for j in range(3):
                     f.write(f"        <td>\n")
@@ -2832,8 +2856,7 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                         if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
                             f.write(f"              <th colspan='5' class={th_class_name}>{boxes[box_number].name}</th>\n")
                     f.write(f"            </tr>\n")
-
-                    f.write(f'            <tr class={"participant_choice_normal"}>\n')
+                    f.write('            <tr class=\"participant_header_row\">\n')
                     if (boxes[box_number].box_style == BoxStyle.TBS_TEAM):
                         f.write(f"              <td style=\"text-align: center;\">Teams</td>\n")
                         if not gFlagSelectionGrid:
