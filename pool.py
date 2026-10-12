@@ -1578,8 +1578,16 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".participant_header_row {\n")
-        f.write("  background-color: #FFCC80;\n")
-        f.write("  color: #4E342E;\n")
+        f.write("  background-color: yellow;\n")
+        f.write("  color: #202040;\n")
+        f.write("  font-weight: bold;\n")
+        f.write("  border-bottom: 1px solid silver;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".participant_header_row_lowest {\n")
+        f.write("  background-color: #e0e0e0;\n")
+        f.write("  color: #black;\n")
         f.write("  font-weight: bold;\n")
         f.write("  border-bottom: 1px solid silver;\n")
         f.write("}\n")
@@ -1596,20 +1604,27 @@ def procedure_css_file(for_website_directory: str) -> None:
 
         f.write(".participant_choice_best {\n")
         f.write("  background-color: #e0ffe0;\n")
-        f.write("  color: #008000;\n")
+        f.write("  color: black;\n")
         f.write("  font-weight: bold;\n")
         f.write("}\n")
         f.write("\n")
 
         f.write(".participant_choice_worse {\n")
         f.write("  background-color: #ffe0e0;\n")
-        f.write("  color: #800000;\n")
+        f.write("  color: black;\n")
         f.write("  font-weight: bold;\n")
         f.write("}\n")
         f.write("\n")
 
         f.write(".participant_choice_normal {\n")
         f.write("  background-color: #e0e0ff;\n")
+        f.write("  color: black;\n")
+        f.write("  font-weight: bold;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".participant_not_chosen {\n")
+        f.write("  background-color: #e0e0e0;\n")
         f.write("  color: #000080;\n")
         f.write("  font-weight: bold;\n")
         f.write("}\n")
@@ -1630,38 +1645,19 @@ def procedure_css_file(for_website_directory: str) -> None:
 
         f.write(".participant_not_choice_normal {\n")
         f.write("  background-color: white;\n")
-        f.write("  color: black;\n")
+        f.write("  color: #b8b8b8;\n")
         f.write("}\n")
         f.write("\n")
 
         f.write(".participant_not_choice_dropped {\n")
         f.write("  background-color: white;\n")
-        f.write("  color: #808080;\n")
+        f.write("  color: #b8b8b8;\n")
         f.write("}\n")
         f.write("\n")
 
         f.write(".outer-table {\n")
         f.write(" border: 3px solid black;\n")
         f.write(" border-collapse: collapse;\n")
-        f.write("}\n")
-        f.write("\n")
-
-        f.write(".inner-table {\n")
-        f.write(" table-layout: fixed;\n")
-        f.write(" border: 1px solid silver;\n")
-        f.write(" border-collapse: collapse;\n")
-        f.write("}\n")
-        f.write("\n")
-
-        f.write(".inner-table th {\n")
-
-        if gFlagSelectionGrid:
-            f.write(" width: 280px;\n")
-        else:
-            f.write(" width: 360px;\n")
-
-        f.write(" height: 20px;\n")
-        f.write(" border-bottom: 1px solid silver;\n")
         f.write("}\n")
         f.write("\n")
 
@@ -1684,7 +1680,7 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write(".outer-table th.colspan-4 a:hover {\n")
         f.write("  color: #38BDF8;\n")
         f.write("  text-decoration: none;\n")
-        f.write("}\n")        
+        f.write("}\n")
 
         f.write(".outer-table th.colspan-3 {\n")
         f.write("  background-color: darkblue;\n")
@@ -1705,7 +1701,25 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write(".outer-table th.colspan-3 a:hover {\n")
         f.write("  color: #38BDF8;\n")
         f.write("  text-decoration: none;\n")
-        f.write("}\n")        
+        f.write("}\n")
+
+        f.write(".inner-table {\n")
+        f.write(" table-layout: fixed;\n")
+        f.write(" border: 1px solid silver;\n")
+        f.write(" border-collapse: collapse;\n")
+
+        if gFlagSelectionGrid:
+            f.write(" width: 280px;\n")
+        else:
+            f.write(" width: 360px;\n")
+
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".inner-table th {\n")
+        f.write(" height: 20px;\n")
+        f.write(" border-bottom: 1px solid silver;\n")
+        f.write("}\n")
 
         f.write(".outer-ranking-table {\n")
         f.write(" border: 0px solid black;\n")
@@ -1925,7 +1939,7 @@ def procedure_css_file(for_website_directory: str) -> None:
         # f.write("  color: #38BDF8;\n")
         # f.write("  text-decoration: none;\n")
         # f.write("}\n")
-        # f.write("\n")        
+        # f.write("\n")
 
         f.write(".who-chose-own-participant {\n")
         f.write("  font-weight: bold;\n")
@@ -2580,7 +2594,7 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
 
         # Write the source of the injury reports which is "https://www.cbssports.com/nhl/injuries/"
         f.write("     <p>Source: <a href=\"https://www.cbssports.com/nhl/injuries/\" target=\"_blank\">CBS Sports NHL Injuries</a></p>\n")
- 
+
         f.write("     <table class=\"outer-table\" border='0' style=\"width: 700px;\">\n")
         f.write("<colgroup>\n")
         f.write("<col style=\"width:35%;\">\n")
@@ -2788,7 +2802,6 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
 
             header_line = f"{ordinal(participant.rank)} - {html.escape(participant.name)} - {participant.total_points} points"
             header_line += f" - <a href=\"poolparticipant{iParticipantIndex}.html\">Grid's choices</a>"
-#           f.write("     <table class=\"inner-table\" border='0' style=\"width: 700px;\">\n")
             f.write("     <table class=\"outer-table\" border='0' style=\"width: 700px;\">\n")
             f.write("<colgroup>\n")
             f.write("<col style=\"width:8%;\">\n")
@@ -2823,19 +2836,7 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
                 goals = f"{choice.nb_goals}" if is_skater else ""
                 assists = f"{choice.nb_assists}" if is_skater else ""
 
-                # f.write(f"       <tr class=\"{tr_class}\">\n")
-                # f.write(f"         <td {center}>{box_number + 1}</td>\n")
-                # logo = f"<img src=\"{html.escape(choice.team_abreviation)}.svg\" alt=\"{html.escape(choice.team_abreviation)}\" width=\"32\" height=\"32\" style=\"width: 32px; height: 32px; object-fit: contain; flex: 0 0 32px;\">"
-                # f.write(f"         <td><div style=\"display: flex; align-items: center; gap: 8px;\">{logo}<span>{html.escape(choice.name)}</span></div></td>\n")
-                # f.write(f"         <td {center}>{choice.nb_gameplayed}</td>\n")
-                # f.write(f"         <td {center}>{wins}</td>\n")
-                # f.write(f"         <td {center}>{goals}</td>\n")
-                # f.write(f"         <td {center}>{assists}</td>\n")
-                # f.write(f"         <td {center}>{choice.nb_points}</td>\n")
-                # f.write("       </tr>\n")
-
-
-                injured_size = 32 # Set desired injured icon display size in pixels (e.g., 40, 48, 56)
+                injured_size = 32  # Set desired injured icon display size in pixels (e.g., 40, 48, 56)
                 logo_size = 48  # Set desired logo display size in pixels (e.g., 40, 48, 56)
                 padding_left = logo_size + 4  # Generates spacing so text isn't overlapped
 
@@ -2941,61 +2942,79 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
 
                     box_number = (i*NumberOfRow)+j
 
-                    f.write(f"            <tr>\n")
-                    if participant.lowest_round == box_number:
-                        th_class_name = '"box_header_dropped"'
-                    else:
-                        th_class_name = '"box_header_normal"'
-
+                    NbColumns = 3
                     if gFlagSelectionGrid:
-                        th_class_name = '"box_header_normal"'
-
-                    if gFlagSelectionGrid:
-                        f.write(f"              <th colspan='3' class={th_class_name}>{boxes[box_number].name}</th>\n")
+                        NbColumns = 3
                     else:
                         if (boxes[box_number].box_style == BoxStyle.TBS_TEAM) or (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
-                            f.write(f"              <th colspan='4' class={th_class_name}>{boxes[box_number].name}</th>\n")
+                            NbColumns = 4
                         if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
-                            f.write(f"              <th colspan='5' class={th_class_name}>{boxes[box_number].name}</th>\n")
-                    f.write(f"            </tr>\n")
-                    f.write('            <tr class=\"participant_header_row\">\n')
+                            NbColumns = 5
+
+                    f.write("            <colgroup>\n")
+                    if (NbColumns == 3):
+                        f.write("              <col style=\"width:70%;\">\n")
+                        f.write("              <col style=\"width:15%;\">\n")
+                        f.write("              <col style=\"width:15%;\">\n")
+                    if (NbColumns == 4):
+                        f.write("              <col style=\"width:70%;\">\n")
+                        f.write("              <col style=\"width:10%;\">\n")
+                        f.write("              <col style=\"width:10%;\">\n")
+                        f.write("              <col style=\"width:10%;\">\n")
+                    if (NbColumns == 5):
+                        f.write("              <col style=\"width:70%;\">\n")
+                        f.write("              <col style=\"width:7.5%;\">\n")
+                        f.write("              <col style=\"width:7.5%;\">\n")
+                        f.write("              <col style=\"width:7.5%;\">\n")
+                        f.write("              <col style=\"width:7.5%;\">\n")
+                    f.write("            </colgroup>\n")
+
+                    if participant.lowest_round == box_number:
+                        tr_headerrow_class = "participant_header_row_lowest"
+                    else:
+                        tr_headerrow_class = "participant_header_row"
+
+                    f.write(f'            <tr class=\"{tr_headerrow_class}\">\n')
+
                     if (boxes[box_number].box_style == BoxStyle.TBS_TEAM):
-                        f.write(f"              <td style=\"text-align: center;\">Teams</td>\n")
+                        f.write(f"              <th style=\"position: relative; text-align: center;\"><span style=\"position: absolute; left: 6px;\">Box #{box_number + 1}</span>Teams</th>\n")
                         if not gFlagSelectionGrid:
-                            f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
-                            f.write(f"              <td style=\"text-align: center;\">W</td>\n")
-                            f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
+                            f.write(f"              <th style=\"text-align: center;\">GP</th>\n")
+                            f.write(f"              <th style=\"text-align: center;\">W</th>\n")
+                            f.write(f"              <th style=\"text-align: center;\">Pts</th>\n")
                         else:
-                            f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
-                            f.write(f"              <td style=\"text-align: center;\">\"X\"</td>\n")
+                            f.write(f"              <th style=\"text-align: center;\">Avg</th>\n")
+                            f.write(f"              <th style=\"text-align: center;\">\"X\"</th>\n")
 
                     if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
-                        f.write(f"              <td style=\"text-align: center;\">Players</td>\n")
+                        f.write(f"              <th style=\"position: relative; text-align: center;\"><span style=\"position: absolute; left: 6px;\">Box #{box_number + 1}</span>Players</th>\n")
                         if not gFlagSelectionGrid:
-                            f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
-                            f.write(f"              <td style=\"text-align: center;\">G</td>\n")
-                            f.write(f"              <td style=\"text-align: center;\">A</td>\n")
-                            f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
+                            f.write(f"              <th style=\"text-align: center;\">GP</th>\n")
+                            f.write(f"              <th style=\"text-align: center;\">G</th>\n")
+                            f.write(f"              <th style=\"text-align: center;\">A</th>\n")
+                            f.write(f"              <th style=\"text-align: center;\">Pts</th>\n")
                         else:
-                            f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
-                            f.write(f"              <td style=\"text-align: center;\">\"X\"</td>\n")
+                            f.write(f"              <th style=\"text-align: center;\">Avg</th>\n")
+                            f.write(f"              <th style=\"text-align: center;\">\"X\"</th>\n")
 
                     if (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
-                        f.write(f"              <td style=\"text-align: center;\">Players</td>\n")
+                        f.write(f"              <th style=\"position: relative; text-align: center;\"><span style=\"position: absolute; left: 6px;\">Box #{box_number + 1}</span>Players</th>\n")
                         if not gFlagSelectionGrid:
-                            f.write(f"              <td style=\"text-align: center;\">GP</td>\n")
-                            f.write(f"              <td style=\"text-align: center;\">W</td>\n")
-                            f.write(f"              <td style=\"text-align: center;\">Pts</td>\n")
+                            f.write(f"              <th style=\"text-align: center;\">GP</th>\n")
+                            f.write(f"              <th style=\"text-align: center;\">W</th>\n")
+                            f.write(f"              <th style=\"text-align: center;\">Pts</th>\n")
                         else:
-                            f.write(f"              <td style=\"text-align: center;\">Avg</td>\n")
-                            f.write(f"              <td style=\"text-align: center;\">\"X\"</td>\n")
+                            f.write(f"              <th style=\"text-align: center;\">Avg</th>\n")
+                            f.write(f"              <th style=\"text-align: center;\">\"X\"</th>\n")
                     f.write(f"            </tr>\n")
 
                     for k in range(max_choices):
                         if k < len(boxes[box_number].choices):
                             choice = choices[boxes[box_number].choices[k]]
 
-                            if participant.choices[box_number] == boxes[box_number].choices[k]:
+                            is_chosen = (participant.choices[box_number] == boxes[box_number].choices[k])
+
+                            if is_chosen:
                                 if participant.lowest_round == box_number:
                                     tr_participant = '"participant_choice_dropped"'
                                 elif choice.nb_points == boxes[box_number].best_points:
@@ -3015,18 +3034,40 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
 
                             f.write(f"            <tr class={tr_participant}>\n")
 
-                            if boxes[box_number].box_style == BoxStyle.TBS_TEAM:
-                                f.write(f"              <td>{choice.name}</td>\n")
+                            logo_size = 36
+                            injured_size = 20
+                            padding_left = logo_size + injured_size + 8
 
-                            if (boxes[box_number].box_style == BoxStyle.TBS_SKATERS) or (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
-                                f.write(f"              <td>{choice.name} ({choice.team_abreviation.lower()})</td>\n")
+                            svg_filter_style = "" if is_chosen else " filter: grayscale(100%); opacity: 0.25;"
+
+                            logo = (
+                                f'<img src="{html.escape(choice.team_abreviation)}.svg" '
+                                f'alt="{html.escape(choice.team_abreviation)}" '
+                                f'style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); '
+                                f'width: {logo_size}px; height: {logo_size}px; object-fit: contain;{svg_filter_style}">'
+                            )
+
+                            if choice.injury_comment:
+                                injured_slot = (
+                                    f'<a href="injury_report.html"><img src="injured.svg" alt="Injured" title="{html.escape(choice.injury_comment)}" '
+                                    f'style="position: absolute; left: {logo_size + 0}px; top: 50%; transform: translateY(-50%); '
+                                    f'width: {injured_size}px; height: {injured_size}px; object-fit: contain;{svg_filter_style}"></a>'
+                                )
+                            else:
+                                injured_slot = ""
+
+                            f.write(
+                                f'              <td><div style="display: flex; align-items: center; position: relative; '
+                                f'padding-left: {padding_left}px; min-height: 18px;">'
+                                f'{logo}{injured_slot}<span>{html.escape(choice.name)}</span></div></td>\n'
+                            )
 
                             if not gFlagSelectionGrid:
                                 if (boxes[box_number].box_style == BoxStyle.TBS_TEAM) or (boxes[box_number].box_style == BoxStyle.TBS_GOALIE):
-                                    f.write(f"              <td style=\"text-align: center;\">{choice.nb_gameplayed}&nbsp;</td>\n")  
+                                    f.write(f"              <td style=\"text-align: center;\">{choice.nb_gameplayed}&nbsp;</td>\n")
                                     f.write(f"              <td style=\"text-align: center;\">{choice.nb_wins}&nbsp;</td>\n")
                                 if boxes[box_number].box_style == BoxStyle.TBS_SKATERS:
-                                    f.write(f"              <td style=\"text-align: center;\">{choice.nb_gameplayed}&nbsp;</td>\n")  
+                                    f.write(f"              <td style=\"text-align: center;\">{choice.nb_gameplayed}&nbsp;</td>\n")
                                     f.write(f"              <td style=\"text-align: center;\">{choice.nb_goals}&nbsp;</td>\n")
                                     f.write(f"              <td style=\"text-align: center;\">{choice.nb_assists}&nbsp;</td>\n")
                                 f.write(f"              <td style=\"text-align: center;\">{choice.nb_points}&nbsp;</td>\n")
@@ -3045,7 +3086,6 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                     f.write(f"        </td>\n")
                 f.write("      </tr>\n")
             f.write("    </table>\n")
-
 
             # Now, add the personal graphic image showing the ranking over time for this participant.
             # It's an image. The image is generated in the plot_rankings_over_time function and is named personal_ranking_{iParticipantIndex}.png
@@ -3082,7 +3122,7 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     os.makedirs(today_directory, exist_ok=True)
     print(f"Today's directory created: {today_directory}")
     print()
-    
+
     download_directory = today_directory / "downloads"
     print(f"Creating download directory: {download_directory}")
     os.makedirs(download_directory, exist_ok=True)
@@ -3105,7 +3145,7 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
 
     if gExportChoicesToCSV:
         export_choices_to_csv(choices, gTemporaryDirectory / "choices.csv")
-    
+
     if gProcessChoicesFromTmp:
         participant_directory = Path("c:/tmp/test/test/test/Participants")
         process_choice_files(choices, participant_directory)
@@ -3169,12 +3209,13 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     produce_country_grid(report_datetime, gWebDirectory, participants, countries)
     produce_office_grid(report_datetime, gWebDirectory, participants, offices)
     produce_email_message(report_datetime, gWebDirectory, participants, offices)
-    produce_who_chose_who_grid(report_datetime, gWebDirectory, boxes,choices,participants)
+    produce_who_chose_who_grid(report_datetime, gWebDirectory, boxes, choices, participants)
     produce_injury_report_grid(report_datetime, gWebDirectory, choices)
 
     if IS_WINDOWS:
         if gDoAZipAtTheEnd:
             compress_website_directory(gTemporaryDirectory, today_directory / f'bluberi_pool_{today_string}.zip')
+
 
 if __name__ == "__main__":
     freeze_start = time.perf_counter()   # high‑precision timer
