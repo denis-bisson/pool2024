@@ -1673,6 +1673,19 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("  text-align: center;\n")
         f.write("}\n")
 
+        # 1o) Default link color (applies whether visited or unvisited)
+        f.write(".outer-table th.colspan-4 a,\n")
+        f.write(".outer-table th.colspan-4 a:visited {\n")
+        f.write("  color: yellow;\n")
+        f.write("  text-decoration: underline;\n")
+        f.write("}\n")
+
+        # 2o) Color when mouse hovers over it
+        f.write(".outer-table th.colspan-4 a:hover {\n")
+        f.write("  color: #38BDF8;\n")
+        f.write("  text-decoration: none;\n")
+        f.write("}\n")        
+
         f.write(".outer-table th.colspan-3 {\n")
         f.write("  background-color: darkblue;\n")
         f.write("  color: #ffffff;\n")
@@ -1680,6 +1693,19 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("  font-weight: bold;\n")
         f.write("  text-align: center;\n")
         f.write("}\n")
+
+        # 1o) Default link color (applies whether visited or unvisited)
+        f.write(".outer-table th.colspan-3 a,\n")
+        f.write(".outer-table th.colspan-3 a:visited {\n")
+        f.write("  color: yellow;\n")
+        f.write("  text-decoration: underline;\n")
+        f.write("}\n")
+
+        # 2o) Color when mouse hovers over it
+        f.write(".outer-table th.colspan-3 a:hover {\n")
+        f.write("  color: #38BDF8;\n")
+        f.write("  text-decoration: none;\n")
+        f.write("}\n")        
 
         f.write(".outer-ranking-table {\n")
         f.write(" border: 0px solid black;\n")
@@ -1889,17 +1915,17 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("}\n")
         f.write("\n")
 
-        f.write(".other_format, .other_format:visited {\n")
-        f.write("  color: yellow;\n")
-        f.write("  text-decoration: underline;\n")
-        f.write("}\n")
-        f.write("\n")
+        # f.write(".other_format, .other_format:visited {\n")
+        # f.write("  color: yellow;\n")
+        # f.write("  text-decoration: underline;\n")
+        # f.write("}\n")
+        # f.write("\n")
 
-        f.write(".other_format:hover, .other_format:visited:hover {\n")
-        f.write("  color: #38BDF8;\n")
-        f.write("  text-decoration: none;\n")
-        f.write("}\n")
-        f.write("\n")        
+        # f.write(".other_format:hover, .other_format:visited:hover {\n")
+        # f.write("  color: #38BDF8;\n")
+        # f.write("  text-decoration: none;\n")
+        # f.write("}\n")
+        # f.write("\n")        
 
         f.write(".who-chose-own-participant {\n")
         f.write("  font-weight: bold;\n")
@@ -2046,7 +2072,7 @@ def produce_ranking_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Ranking (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2115,7 +2141,7 @@ def produce_sex_grid(generation_timestamp: str, for_website_directory: str, part
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Stats by Gender (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2236,7 +2262,7 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Stats by Country (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2399,7 +2425,7 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Stats by Offices (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2484,7 +2510,7 @@ def produce_email_message(generation_timestamp: str, for_website_directory: str,
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Bluberi Hockey Pool 2026-2027 (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2543,7 +2569,7 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Injury Reports (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2687,7 +2713,7 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Who Chose Who (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2713,7 +2739,7 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
             f.write("  <head>\n")
             f.write("     <meta charset=\"UTF-8\">\n")
             f.write(f"    <title>Who Chose Who: {participant.name} (Generated on {generation_timestamp})</title>\n")
-            f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+            f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
             f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
             f.write("  </head>\n")
 
@@ -2726,8 +2752,8 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
             f.write("       <tr>\n")
 
             header_line = f"{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points"
-            header_line += f" - <a class=\"other_format\" href=\"poolparticipantchoices{iParticipantIndex}.html\">Just Choices</a>"
-            header_line += f" - <a class=\"other_format\" href=\"poolparticipant{iParticipantIndex}.html\">Grid's choices</a>"
+            header_line += f" - <a href=\"poolparticipantchoices{iParticipantIndex}.html\">Just Choices</a>"
+            header_line += f" - <a href=\"poolparticipant{iParticipantIndex}.html\">Grid's choices</a>"
 
             f.write(f"         <th colspan=\"4\" class=\"colspan-4\">{header_line}</th>\n")
             f.write("       </tr>\n")
@@ -2753,7 +2779,7 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
             f.write("  <head>\n")
             f.write("     <meta charset=\"UTF-8\">\n")
             f.write(f"    <title>Participant choices: {html.escape(participant.name)}</title>\n")
-            f.write("    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+            f.write("    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
             f.write("    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
             f.write("  </head>\n")
             f.write("\n")
@@ -2761,7 +2787,7 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
             write_header(generation_timestamp, f, participant_native_index=participant.native_index)
 
             header_line = f"{ordinal(participant.rank)} - {html.escape(participant.name)} - {participant.total_points} points"
-            header_line += f" - <a class=\"other_format\" href=\"poolparticipant{iParticipantIndex}.html\">Grid's choices</a>"
+            header_line += f" - <a href=\"poolparticipant{iParticipantIndex}.html\">Grid's choices</a>"
 #           f.write("     <table class=\"inner-table\" border='0' style=\"width: 700px;\">\n")
             f.write("     <table class=\"outer-table\" border='0' style=\"width: 700px;\">\n")
             f.write("<colgroup>\n")
@@ -2881,7 +2907,7 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
             f.write("  <head>\n")
             f.write("     <meta charset=\"UTF-8\">\n")
             f.write(f"    <title>Participant: {participant.name}</title>\n")
-            f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.1\">\n")
+            f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
             f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
             f.write("\n")
             f.write("  </head>\n")
@@ -2900,7 +2926,7 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                 header_line = 'Grille de Sélection / Selection Grid'
             else:
                 header_line = f"{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points"
-                header_line += f" - <a class=\"other_format\" href=\"poolparticipantchoices{iParticipantIndex}.html\">Just Choices</a>"
+                header_line += f" - <a href=\"poolparticipantchoices{iParticipantIndex}.html\">Just Choices</a>"
 
             f.write("       <tr>\n")
             f.write(f"         <th colspan=\"{NumberOfRow}\" class=\"colspan-{NumberOfRow}\">{header_line}</th>\n")
