@@ -1153,13 +1153,15 @@ def strip_html_tags(raw_html: str) -> str:
 
 
 def get_injury_report(choices: List[Choice], download_directory: str) -> None:
-    filename = os.path.join(download_directory, "espn_injuries.html")
+    filename = os.path.join(download_directory, "cbs_injuries.html")
 
-    if not os.path.exists(filename):
+#   if not os.path.exists(filename):
+    if True:
         print()
-        print("Downloading NHL injury report from ESPN...")
-        url = "https://www.espn.com/nhl/injuries"
+        print("Downloading NHL injury report from CBS...")
+        url = "https://www.cbssports.com/nhl/injuries/"
         response = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
+        response.raise_for_status()
 
         with open(f"{filename}", "w", encoding="utf-8") as f:
             f.write(response.text)
@@ -1171,35 +1173,70 @@ def get_injury_report(choices: List[Choice], download_directory: str) -> None:
     print()
     print("Parsing NHL injury report...")
 
-    # The ESPN injury table has no column headers worth keeping, so a plain row-by-row regex scan is enough.
     nb_matched = 0
-    for row_match in re.finditer(r"<tr[^>]*>(.*?)</tr>", page_content, re.S | re.I):
-        cells = [strip_html_tags(cell) for cell in re.findall(r"<td[^>]*>(.*?)</td>", row_match.group(1), re.S | re.I)]
+    column_indexes = {}
+    wanted_columns = {
+        "player": "player",
+        "position": "position",
+        "updated": "updated",
+        "injury": "injury",
+        "injurystatus": "injury status",
+    }
 
-        if len(cells) < 4 or cells[0] == "":
+    for row_match in re.finditer(r"<tr[^>]*>(.*?)</tr>", page_content, re.S | re.I):
+        cell_matches = list(re.finditer(r"<(th|td)[^>]*>(.*?)</\1>", row_match.group(1), re.S | re.I))
+        cells = []
+        for cell in cell_matches:
+            # CBS player cells hold both an abbreviated ("R. Poehling") and a full name; keep only the full one.
+            long_name = re.search(r'class="CellPlayerName--long"[^>]*>(.*?)</span></span>', cell.group(2), re.S | re.I)
+            cells.append(strip_html_tags(long_name.group(1) if long_name else cell.group(2)))
+
+        header_indexes = {}
+        for index, cell in enumerate(cells):
+            normalized_cell = re.sub(r"[^a-z]", "", cell.lower())
+            if normalized_cell in wanted_columns and cell_matches[index].group(1).lower() == "th":
+                header_indexes[wanted_columns[normalized_cell]] = index
+        if "player" in header_indexes and "injury status" in header_indexes:
+            column_indexes = header_indexes
             continue
 
-        player_name = cells[0]
-        estimated_return = cells[2] 
-        status = cells[3]
-        comment = cells[4] if len(cells) >= 5 else ""
+        if not column_indexes or not cells:
+            continue
 
-        # Construct the injury comment based on the "status", "comment" and "estimated return" fields,
-        injury_comment_parts = []
-        if comment:
-            if "ir-nr" not in comment.lower():
-                injury_comment_parts.append(f"{comment}")
-        if status:
-            injury_comment_parts.append(f"{status}")
-        if estimated_return:
-            injury_comment_parts.append(f"Estimated Return: {estimated_return}")
+        player_name = cells[column_indexes["player"]] if column_indexes["player"] < len(cells) else ""
+        if not player_name:
+            continue
 
-        injury_comment = "<BR>".join(injury_comment_parts)
+        # Let's get the injury information for this player in a different way.
+        Injury_info = None
+        if "injury" in column_indexes and column_indexes["injury"] < len(cells):
+            Injury_info = cells[column_indexes["injury"]]
 
+        Injury_status = None
+        if "injury status" in column_indexes and column_indexes["injury status"] < len(cells):
+            Injury_status = cells[column_indexes["injury status"]]
+
+        Injury_updated = None
+        if "updated" in column_indexes and column_indexes["updated"] < len(cells):
+            Injury_updated = cells[column_indexes["updated"]]
+
+        Injury_combined = None
+        if (Injury_info != None) and (Injury_status != None):
+            Injury_combined = f"{Injury_info} - {Injury_status}"
+        elif (Injury_info != None):
+            Injury_combined = Injury_info
+        elif (Injury_status != None):
+            Injury_combined = Injury_status
+
+        if Injury_updated is not None:
+            if Injury_combined is not None:
+                Injury_combined = f"{Injury_combined} <BR> Updated: {Injury_updated}"
+            else:
+                Injury_combined = f"Updated: {Injury_updated}"
 
         for choice in choices:
             if choice.box_style in (BoxStyle.TBS_SKATERS, BoxStyle.TBS_GOALIE) and choice.name.lower() == player_name.lower():
-                choice.injury_comment = injury_comment
+                choice.injury_comment = Injury_combined
                 nb_matched += 1
                 break
 
@@ -2515,9 +2552,9 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
 
         write_header(generation_timestamp, f)
 
-        # Write the source of the injury reports which is "https://www.espn.com/nhl/injuries"
-        f.write("     <p>Source: <a href=\"https://www.espn.com/nhl/injuries\" target=\"_blank\">ESPN NHL Injuries</a></p>\n")
-
+        # Write the source of the injury reports which is "https://www.cbssports.com/nhl/injuries/"
+        f.write("     <p>Source: <a href=\"https://www.cbssports.com/nhl/injuries/\" target=\"_blank\">CBS Sports NHL Injuries</a></p>\n")
+ 
         f.write("     <table class=\"outer-table\" border='0' style=\"width: 700px;\">\n")
         f.write("<colgroup>\n")
         f.write("<col style=\"width:35%;\">\n")
@@ -3066,12 +3103,13 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     # get_officepools_points_manually(participants, download_directory)
 
     set_nhl_teams_ids_of_choices(choices, nhl_teams)
-    set_playing_tonight_status(choices, "today.json")
 
+    get_injury_report(choices, download_directory)
+
+    set_playing_tonight_status(choices, "today.json")
     get_choices_skaters_stats2(choices, download_directory)
     get_choices_teams_stats2(choices, download_directory)
     get_choices_individual_teams_stats2(choices, download_directory)
-    get_injury_report(choices, download_directory)
 
     # 2026-09-20:DB-Let's try for this year not using Office Pools!
     # get_officepools_points_from_excel_file(participants, 'c:/Users/DBisson/Downloads/custom.xls')
