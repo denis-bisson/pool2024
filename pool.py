@@ -2748,7 +2748,7 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
 
             write_header(generation_timestamp, f)
 
-            f.write("     <table class=\"ranking-table who-chose-table\">\n")
+            f.write("     <table class=\"outer-table\">\n")
             f.write("       <tr>\n")
 
             header_line = f"{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points"
