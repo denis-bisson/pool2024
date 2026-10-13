@@ -20,6 +20,8 @@ import platform
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX = platform.system() == "Linux"
 
+gCSS_VERSION = "2026.10.13.0642"
+
 if IS_WINDOWS:
     print("Running on Windows")
 elif IS_LINUX:
@@ -1549,6 +1551,12 @@ def copy_required_ressources(for_website_directory: str, param_offices: List[Off
 
 def procedure_css_file(for_website_directory: str) -> None:
     with open(os.path.join(for_website_directory, "pool_style.css"), 'w', encoding='utf-8', newline='\r\n') as f:
+        f.write("/* \n")
+        f.write("  Stylesheet: Pool Style\n")
+        f.write(f"  Version: {gCSS_VERSION}\n")
+        f.write("*/\n")
+        f.write("\n")
+
         f.write("body {\n")
         f.write("  background-color: #ffffff;\n")
         f.write("  font-family: Arial, sans-serif;\n")
@@ -2086,7 +2094,7 @@ def produce_ranking_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Ranking (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2155,7 +2163,7 @@ def produce_sex_grid(generation_timestamp: str, for_website_directory: str, part
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Stats by Gender (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2276,7 +2284,7 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Stats by Country (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2439,7 +2447,7 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Stats by Offices (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2524,7 +2532,7 @@ def produce_email_message(generation_timestamp: str, for_website_directory: str,
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Bluberi Hockey Pool 2026-2027 (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2583,7 +2591,7 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Injury Reports (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2727,7 +2735,7 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
         f.write(f"    <title>Who Chose Who (Generated on {generation_timestamp})</title>\n")
-        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
 
@@ -2753,7 +2761,7 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
             f.write("  <head>\n")
             f.write("     <meta charset=\"UTF-8\">\n")
             f.write(f"    <title>Who Chose Who: {participant.name} (Generated on {generation_timestamp})</title>\n")
-            f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
+            f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
             f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
             f.write("  </head>\n")
 
@@ -2793,7 +2801,7 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
             f.write("  <head>\n")
             f.write("     <meta charset=\"UTF-8\">\n")
             f.write(f"    <title>Participant choices: {html.escape(participant.name)}</title>\n")
-            f.write("    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
+            f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
             f.write("    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
             f.write("  </head>\n")
             f.write("\n")
@@ -2908,7 +2916,7 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
             f.write("  <head>\n")
             f.write("     <meta charset=\"UTF-8\">\n")
             f.write(f"    <title>Participant: {participant.name}</title>\n")
-            f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v=1.2\">\n")
+            f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
             f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
             f.write("\n")
             f.write("  </head>\n")
