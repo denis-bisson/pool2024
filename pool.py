@@ -20,7 +20,7 @@ import platform
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX = platform.system() == "Linux"
 
-gCSS_VERSION = "2026.10.13.0642"
+gCSS_VERSION = "2026.1014.0730.1"
 
 if IS_WINDOWS:
     print("Running on Windows")
@@ -1611,21 +1611,21 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".participant_choice_best {\n")
-        f.write("  background-color: #e0ffe0;\n")
+        f.write("  background-color: #c0ffc0;\n")
         f.write("  color: black;\n")
         f.write("  font-weight: bold;\n")
         f.write("}\n")
         f.write("\n")
 
         f.write(".participant_choice_worse {\n")
-        f.write("  background-color: #ffe0e0;\n")
+        f.write("  background-color: #ffc0c0;\n")
         f.write("  color: black;\n")
         f.write("  font-weight: bold;\n")
         f.write("}\n")
         f.write("\n")
 
         f.write(".participant_choice_normal {\n")
-        f.write("  background-color: #e0e0ff;\n")
+        f.write("  background-color: #c0c0ff;\n")
         f.write("  color: black;\n")
         f.write("  font-weight: bold;\n")
         f.write("}\n")
@@ -1866,7 +1866,7 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".row_even {\n")
-        f.write("  background-color: #d0d0d0;\n")
+        f.write("  background-color: #e8e8e8;\n")
         f.write("}\n")
         f.write("\n")
 
@@ -1905,20 +1905,18 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
         f.write(".who-chose-table .col-choice {\n")
-        f.write("  width: 200px;\n")
+        f.write("  width: 320px;\n")
         f.write("}\n")
         f.write("\n")
-
         f.write(".who-chose-table .col-points, .who-chose-table .col-nb {\n")
         f.write("  width: 50px;\n")
         f.write("}\n")
         f.write("\n")
 
         f.write(".who-chose-table .col-participants {\n")
-        f.write("  width: 780px;\n")
+        f.write("  width: 660px;\n")
         f.write("}\n")
         f.write("\n")
-
         f.write(".who-chose-table td.col-participants {\n")
         f.write("  font-weight: normal;\n")
         f.write("  color: black;\n")
@@ -2649,7 +2647,7 @@ def produce_injury_report_grid(generation_timestamp: str, for_website_directory:
         f.write("</html>\n")
 
 
-def write_who_chose_who_box_table(f, box: Box, choices: List[Choice], participants: List[Participant], owner_participant: "Participant | None" = None) -> None:
+def write_who_chose_who_box_table(iBoxNumber: int, f, box: Box, choices: List[Choice], participants: List[Participant], owner_participant: "Participant | None" = None) -> None:
     f.write("     <table class=\"who-chose-table\">\n")
 
     # table-layout:fixed derives column widths from the first row, so an explicit colgroup is required.
@@ -2661,11 +2659,8 @@ def write_who_chose_who_box_table(f, box: Box, choices: List[Choice], participan
     f.write("       </colgroup>\n")
 
     f.write("       <tr>\n")
-    f.write(f"         <th colspan=\"4\" class=\"box_header_normal\">{box.name}</th>\n")
-    f.write("       </tr>\n")
-
-    f.write("       <tr>\n")
-    f.write("         <th class=\"participant_header_row\">Choice</th>\n")
+#   f.write("         <th class=\"participant_header_row\">Choice</th>\n")
+    f.write(f"        <th class=\"participant_header_row\" style=\"position: relative; text-align: center;\"><span style=\"position: absolute; left: 6px;\">Box #{iBoxNumber+1}</span>Choice</th>\n")
     f.write("         <th class=\"participant_header_row\">Points</th>\n")
     f.write("         <th class=\"participant_header_row\">Nb</th>\n")
     f.write("         <th class=\"participant_header_row\">Participants</th>\n")
@@ -2709,16 +2704,34 @@ def write_who_chose_who_box_table(f, box: Box, choices: List[Choice], participan
                 else:
                     row_class = "participant_choice_normal"
             else:
-                if owner_participant.lowest_round == choice.box_number:
-                    row_class = "participant_not_choice_dropped"
-                else:
-                    row_class = "participant_not_choice_normal"
+                row_color = "row_even" if row_color == "row_odd" else "row_odd"
+                row_class = row_color
         else:
             row_color = "row_even" if row_color == "row_odd" else "row_odd"
             row_class = row_color
 
         f.write(f"       <tr class=\"{row_class}\">\n")
-        f.write(f"         <td class=\"col-choice\">{choice.name} ({choice.team_abreviation.lower()})</td>\n")
+        injured_size = 32
+        logo_size = 48
+        padding_left = logo_size + 4
+        team = html.escape(choice.team_abreviation)
+        logo = (
+            f'<img src="{team}.svg" alt="{team}" '
+            f'style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); '
+            f'width: {logo_size}px; height: {logo_size}px; object-fit: contain;">'
+        )
+        if choice.injury_comment:
+            injured_slot = (
+                f'<a href="injury_report.html"><img src="injured.svg" alt="Injured" title="{html.escape(choice.injury_comment)}" '
+                f'style="width: {injured_size}px; height: {injured_size}px; object-fit: contain; flex: 0 0 {injured_size}px; margin-right: 4px;"></a>'
+            )
+        else:
+            injured_slot = f'<span style="display: inline-block; width: {injured_size}px; flex: 0 0 {injured_size}px; margin-right: 4px;"></span>'
+        f.write(
+            f'         <td class="col-choice"><div style="display: flex; align-items: center; position: relative; '
+            f'padding-left: {padding_left}px; min-height: 28px;">'
+            f'{logo}{injured_slot}<span>{html.escape(choice.name)}</span></div></td>\n'
+        )
         f.write(f"         <td class=\"just_center col-points\">{choice.nb_points}</td>\n")
         f.write(f"         <td class=\"just_center col-nb\">{len(chosen_by)}</td>\n")
         f.write(f"         <td class=\"col-participants\">{', '.join(chosen_by_links)}</td>\n")
@@ -2744,8 +2757,8 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
 
         write_header(generation_timestamp, f)
 
-        for box in boxes:
-            write_who_chose_who_box_table(f, box, choices, participants)
+        for iBoxNumber, box in enumerate(boxes):
+            write_who_chose_who_box_table(iBoxNumber, f, box, choices, participants)
             f.write("<BR>\n")
 
         write_footer(generation_timestamp, f)
@@ -2782,8 +2795,8 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
             f.write("     </table>\n")
             f.write("<BR>\n")
 
-            for box in boxes:
-                write_who_chose_who_box_table(f, box, choices, participants, owner_participant=participant)
+            for iBoxNumber, box in enumerate(boxes):
+                write_who_chose_who_box_table(iBoxNumber, f, box, choices, participants, owner_participant=participant)
                 f.write("<BR>\n")
 
             write_footer(generation_timestamp, f)
@@ -3046,7 +3059,7 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
                             injured_size = 20
                             padding_left = logo_size + injured_size + 8
 
-                            svg_filter_style = "" if is_chosen else " filter: grayscale(100%); opacity: 0.25;"
+                            svg_filter_style = "" if is_chosen and (participant.lowest_round != box_number) else " filter: grayscale(100%); opacity: 0.25;"
 
                             logo = (
                                 f'<img src="{html.escape(choice.team_abreviation)}.svg" '
