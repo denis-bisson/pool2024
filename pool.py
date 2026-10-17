@@ -1,3 +1,4 @@
+from random import choice
 import shutil
 from pathlib import Path
 import pandas as pd
@@ -20,7 +21,7 @@ import platform
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX = platform.system() == "Linux"
 
-gCSS_VERSION = "2026.1014.0730.1"
+gCSS_VERSION = "2026.1016.1743.1"
 
 if IS_WINDOWS:
     print("Running on Windows")
@@ -2861,6 +2862,12 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
                 logo_size = 48  # Set desired logo display size in pixels (e.g., 40, 48, 56)
                 padding_left = logo_size + 4  # Generates spacing so text isn't overlapped
 
+                # svg_filter_style = "" if is_chosen and (participant.lowest_round != box_number) else " filter: grayscale(100%); opacity: 0.25;"
+                if choice.injury_comment:
+                    svg_filter_style = " filter: grayscale(100%); opacity: 0.25;"
+                else:
+                    svg_filter_style = ""
+
                 f.write(f"        <tr class=\"{tr_class}\">\n")
                 f.write(f"          <td {center}>{box_number + 1}</td>\n")
 
@@ -2868,7 +2875,7 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
                     f'<img src="{html.escape(choice.team_abreviation)}.svg" '
                     f'alt="{html.escape(choice.team_abreviation)}" '
                     f'style="position: absolute; left: 0; top: 50%; transform: translateY(-50%); '
-                    f'width: {logo_size}px; height: {logo_size}px; object-fit: contain;">'
+                    f'width: {logo_size}px; height: {logo_size}px; object-fit: contain;{svg_filter_style}">'
                 )
 
                 # An injured player gets the injured.svg icon (same size as the team logo) before the name;
@@ -2877,7 +2884,7 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
                 if choice.injury_comment:
                     injured_slot = (
                         f'<a href="injury_report.html"><img src="injured.svg" alt="Injured" title="{html.escape(choice.injury_comment)}" '
-                        f'style="width: {injured_size}px; height: {injured_size}px; object-fit: contain; flex: 0 0 {injured_size}px; margin-right: 4px;"></a>'
+                        f'style="width: {injured_size}px; height: {injured_size}px; object-fit: contain; flex: 0 0 {injured_size}px; margin-right: 4px;{svg_filter_style}"></a>'
                     )
                 else:
                     injured_slot = f'<span style="display: inline-block; width: {injured_size}px; flex: 0 0 {injured_size}px; margin-right: 4px;"></span>'
