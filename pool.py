@@ -2863,7 +2863,7 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
                 padding_left = logo_size + 4  # Generates spacing so text isn't overlapped
 
                 # svg_filter_style = "" if is_chosen and (participant.lowest_round != box_number) else " filter: grayscale(100%); opacity: 0.25;"
-                if choice.injury_comment:
+                if is_dropped:
                     svg_filter_style = " filter: grayscale(100%); opacity: 0.25;"
                 else:
                     svg_filter_style = ""
