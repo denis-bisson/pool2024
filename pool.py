@@ -48,7 +48,7 @@ else:
 gExportChoicesToCSV = False
 gFlagSelectionGrid = False
 gPlotOfRankingOverTime = False
-gProcessChoicesFromTmp = True
+gProcessChoicesFromTmp = False
 gDoAZipAtTheEnd = False
 
 # https://github.com/Zmalski/NHL-API-Reference?tab=readme-ov-file#get-specific-player-info
@@ -101,6 +101,16 @@ class CountryData:
         self.total_points = 0
         self.average_points = 0
         self.icon_filename = icon_filename
+        self.rank = -1
+
+
+class SpeciesData:
+    def __init__(self, species_type: SpeciesType, species_name: str) -> None:
+        self.name = species_name
+        self.species_type = species_type
+        self.number = 0
+        self.total_points = 0
+        self.average_points = 0
         self.rank = -1
 
 
@@ -552,6 +562,11 @@ def init_boxes(choices: list, boxes: list) -> None:
 def init_countries(countries: list[CountryData]) -> None:
     countries.append(CountryData(CountryType.COUNTRY_CANADA, "Canada", "canada.png"))
     countries.append(CountryData(CountryType.COUNTRY_USA, "USA", "usa.png"))
+
+
+def init_species(species: list[SpeciesData]) -> None:
+    species.append(SpeciesData(SpeciesType.SPECIE_HUMAN, "Human"))
+    species.append(SpeciesData(SpeciesType.SPECIE_AI, "AI"))
 
 
 def init_offices(offices: list[OfficeData]) -> None:
@@ -2380,6 +2395,135 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("</html>\n")
 
 
+def write_ranking_species_table(f, participants: List[Participant], species: SpeciesData) -> None:
+    f.write("     <table class=\"outer-table\">\n")
+
+    f.write("       <tr>\n")
+    f.write(f"         <th colspan=\"3\" class=\"colspan-3\">{species.name}</th>\n")
+    f.write("       </tr>\n")
+
+    f.write("       <tr>\n")
+    f.write("         <th class=\"participant_header_row\">Rank</th>\n")
+    f.write("         <th class=\"participant_header_row\">Name</th>\n")
+    f.write("         <th class=\"participant_header_row\">Total Points</th>\n")
+    f.write("       </tr>\n")
+
+    sorted_participants = sorted(participants, key=lambda x: x.total_points, reverse=True)
+    sorted_participants = [participant for participant in sorted_participants if participant.species == species.species_type]
+
+    row_color = "row_odd"
+    previous_rank = -1
+
+    for participant in sorted_participants:
+        if participant.rank != previous_rank:
+            row_color = "row_odd" if row_color == "row_even" else "row_even"
+            previous_rank = participant.rank
+
+        f.write(f"       <tr class=\"{row_color}\">\n")
+        f.write(f"         <td class=\"just_center\">{participant.rank}</td>\n")
+        f.write(f"         <td><a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
+        f.write(f"         <td class=\"just_center\"><a class=\"participant-hover-link\" href=\"poolparticipantchoices{participant.native_index}.html\">{participant.total_points}</a></td>\n")
+        f.write("       </tr>\n")
+
+    f.write("     </table>\n")
+
+
+def produce_species_grid(generation_timestamp: str, for_website_directory: str, participants: List[Participant], species: List[SpeciesData]) -> None:
+    for participant in participants:
+        for species_participant in species:
+            if participant.species == species_participant.species_type:
+                species_participant.number += 1
+                species_participant.total_points += participant.total_points
+                break
+
+    for species_participant in species:
+        if species_participant.number != 0:
+            species_participant.average_points = species_participant.total_points / species_participant.number
+        else:
+            species_participant.average_points = 0
+
+    sorted_species = sorted(species, key=lambda x: x.average_points, reverse=True)
+
+    # Species with the same average share the same rank
+    previous_average = None
+    rank = -1
+    for index, species_participant in enumerate(sorted_species):
+        if species_participant.average_points != previous_average:
+            rank = index + 1
+            previous_average = species_participant.average_points
+        species_participant.rank = rank
+
+    print()
+    print("Stats by Species")
+    for species_participant in sorted_species:
+        print(f"{species_participant.average_points:.2f} - {species_participant.name}")
+
+    with open(os.path.join(for_website_directory, "species_stats.html"), 'w', encoding='utf-8', newline='\r\n') as f:
+        f.write("<!DOCTYPE html>\n")
+        f.write("<html lang=\"en\">\n")
+        f.write("  <head>\n")
+        f.write("     <meta charset=\"UTF-8\">\n")
+        f.write(f"    <title>Stats by Species (Generated on {generation_timestamp})</title>\n")
+        f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
+        f.write("    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
+        f.write("  </head>\n")
+
+        f.write("\n")
+        f.write("  <body>\n")
+
+        write_header(generation_timestamp, f)
+
+        f.write("     <table class=\"outer-table\">\n")
+
+        f.write("       <tr>\n")
+        f.write("         <th colspan=\"4\" class=\"colspan-4\">Stats by Species</th>\n")
+        f.write("       </tr>\n")
+
+        f.write("       <tr>\n")
+        f.write("         <th class=\"participant_header_row\">Rank</th>\n")
+        f.write("         <th class=\"participant_header_row\">Species</th>\n")
+        f.write("         <th class=\"participant_header_row\">Participants</th>\n")
+        f.write("         <th class=\"participant_header_row\">Average</th>\n")
+        f.write("       </tr>\n")
+
+        row_color = "row_odd"
+        previous_rank = -1
+
+        for species_participant in sorted_species:
+            if species_participant.rank != previous_rank:
+                row_color = "row_odd" if row_color == "row_even" else "row_even"
+                previous_rank = species_participant.rank
+
+            f.write(f"       <tr class=\"{row_color}\">\n")
+            f.write(f"         <td class=\"just_center\">{species_participant.rank}</td>\n")
+            f.write(f"         <td>{species_participant.name}</td>\n")
+            f.write(f"         <td class=\"just_center\">{species_participant.number}</td>\n")
+            f.write(f"         <td class=\"just_center\">{species_participant.average_points:.2f}</td>\n")
+            f.write("       </tr>\n")
+
+        f.write("     </table>\n")
+
+        f.write("<BR>\n")
+
+        f.write("     <table class=\"outer-ranking-table\">\n")
+        f.write("       <tr>\n")
+        for index, species_participant in enumerate(sorted_species):
+            if index > 0:
+                f.write("         <td>\n")
+                f.write("         &nbsp;\n")
+                f.write("         </td>\n")
+            f.write("         <td>\n")
+            write_ranking_species_table(f, participants, species_participant)
+            f.write("         </td>\n")
+        f.write("       </tr>\n")
+        f.write("     </table>\n")
+
+        write_footer(generation_timestamp, f)
+
+        f.write("  </body>\n")
+        f.write("</html>\n")
+
+
 def write_ranking_office_table(f, participants: List[Participant], office: OfficeData) -> None:
     f.write("     <table class=\"outer-table\">\n")
 
@@ -3202,6 +3346,9 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     countries = []
     init_countries(countries)
 
+    species = []
+    init_species(species)
+
     offices = []
     init_offices(offices)
 
@@ -3250,6 +3397,7 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
     produce_ranking_grid(report_datetime, gWebDirectory, participants)
     produce_sex_grid(report_datetime, gWebDirectory, participants)
     produce_country_grid(report_datetime, gWebDirectory, participants, countries)
+    produce_species_grid(report_datetime, gWebDirectory, participants, species)
     produce_office_grid(report_datetime, gWebDirectory, participants, offices)
     produce_email_message(report_datetime, gWebDirectory, participants, offices)
     produce_who_chose_who_grid(report_datetime, gWebDirectory, boxes, choices, participants)
