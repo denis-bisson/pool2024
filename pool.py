@@ -21,7 +21,7 @@ import platform
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX = platform.system() == "Linux"
 
-gCSS_VERSION = "2026.1016.1743.1"
+gCSS_VERSION = "2026.1023.1650.1"
 
 if IS_WINDOWS:
     print("Running on Windows")
@@ -162,7 +162,8 @@ class Participant:
         if len(choices) != 24:
             raise ValueError(f"Participant must have 24 choices but has {len(choices)} for {name}")
         self.choices = choices
-        self.rank = -1
+        self.rank_within_specie = -1
+        self.rank_mixed_specie = -1
         self.native_index = -1
         self.office_total_points = 0
         self.sex_type = param_sex
@@ -372,7 +373,7 @@ def init_choices(choices: list):
     choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8479979", "Jake Oettinger", "DAL", 0, 0, 0, 0, 0))
     choices.append(Choice(21, BoxStyle.TBS_GOALIE, "8476883", "Andrei Vasilevskiy", "TBL", 0, 0, 0, 0, 0))
 
-    choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8476945", "Connor Hellebuyck", "WPG", 0, 0, 0, 0, 0))
+    choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8476945", "Connor Hellebuyck", "NJD", 0, 0, 0, 0, 0))
     choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8480981", "Joel Hofer", "STL", 0, 0, 0, 0, 0))
     choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8478009", "Ilya Sorokin", "NYI", 0, 0, 0, 0, 0))
     choices.append(Choice(22, BoxStyle.TBS_GOALIE, "8476999", "Linus Ullmark", "OTT", 0, 0, 0, 0, 0))
@@ -1404,18 +1405,40 @@ def set_who_chose_who(participants: List[Participant], choices: List[Choice]) ->
                 choice.who_chose.append(participant_index)
 
 
-def sort_participants(participants: List[Participant]) -> None:
+def assign_ranks_by_points(participants: List[Participant], attribute_name: str) -> None:
+    # Participants with the same total points share the same rank (1, 2, 2, 4...)
     sorted_participants = sorted(participants, key=lambda x: x.total_points, reverse=True)
 
     iPreviousTotalPoints = -1
-    participant_index = 0
     iRank = -1
 
     for participant_index, participant in enumerate(sorted_participants):
         if participant.total_points != iPreviousTotalPoints:
             iRank = participant_index + 1
             iPreviousTotalPoints = participant.total_points
-        participant.rank = iRank
+        setattr(participant, attribute_name, iRank)
+
+
+def sort_participants(participants: List[Participant]) -> None:
+    # Rank each species only against itself
+    for species_type in SpeciesType:
+        same_species = [participant for participant in participants if participant.species == species_type]
+        assign_ranks_by_points(same_species, "rank_within_specie")
+
+    # Rank everybody together, no matter the species
+    assign_ranks_by_points(participants, "rank_mixed_specie")
+
+
+def get_species_name(species_type: SpeciesType) -> str:
+    return "AI" if species_type == SpeciesType.SPECIE_AI else "Human"
+
+
+def format_rank_header(participant: Participant) -> str:
+    # Format the rank header for a participant, showing both within-species and overall rank
+    # Shows the overall first, then the rank within the species
+    # Example output: "Overall rank: 5th - Rank among AI: 2nd"
+    return (f"Rank overall: {ordinal(participant.rank_mixed_specie)}"
+            f" - Rank among {get_species_name(participant.species)}: {ordinal(participant.rank_within_specie)}")
 
 
 def sort_participants_day_by_day(participants: List[Participant]) -> None:
@@ -1474,7 +1497,7 @@ def plot_rankings_over_time(participants, output_path):
                 continue
 
             # Legend label now includes rank
-            legend_label = f"{p.name} ({p.rank})"
+            legend_label = f"{p.name} ({p.rank_mixed_specie})"
 
             if p is target:
                 plt.plot(
@@ -1505,7 +1528,7 @@ def plot_rankings_over_time(participants, output_path):
         plt.ylabel("Rang / Rank")
         plt.title(
             f"Rang à travers le temps / Ranking Over Time — "
-            f"{target.name} {ordinal(target.rank)} avec/with {target.total_points} points"
+            f"{target.name} {ordinal(target.rank_mixed_specie)} avec/with {target.total_points} points"
         )
         plt.grid(True, linestyle="--", alpha=0.3)
 
@@ -1960,6 +1983,16 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("}\n")
         f.write("\n")
 
+        f.write(".participant-hover-link.participant-human, .participant-hover-link.participant-human:visited {\n")
+        f.write("  color: black;\n")
+        f.write("}\n")
+        f.write("\n")
+
+        f.write(".participant-hover-link.participant-ai, .participant-hover-link.participant-ai:visited {\n")
+        f.write("  color: #007A87;\n")
+        f.write("}\n")
+        f.write("\n")
+
         f.write(".participant-hover-link:hover, .participant-hover-link:visited:hover {\n")
         f.write("  color: blue;\n")
         f.write("  text-decoration: underline;\n")
@@ -1986,13 +2019,13 @@ def procedure_css_file(for_website_directory: str) -> None:
         f.write("\n")
 
 
-def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool) -> None:
+def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool, rank_attribute: str, title: str) -> None:
     f.write("     <table class=\"ranking-table\">\n")
 
     if sorted_by_rank:
-        header_line = f"Sorted by total points"
+        header_line = f"{title} - Sorted by total points"
     else:
-        header_line = f"Sorted by name"
+        header_line = f"{title} - Sorted by name"
 
     f.write("       <tr>\n")
     f.write(f"         <th colspan=\"3\" class=\"colspan-3\">{header_line}</th>\n")
@@ -2014,16 +2047,18 @@ def write_ranking_table(f, participants: List[Participant], sorted_by_rank: bool
     previous_rank = -1
 
     for participant in sorted_participants:
-        if participant.rank != previous_rank:
+        participant_rank = getattr(participant, rank_attribute)
+        if participant_rank != previous_rank:
             if row_color == "row_even":
                 row_color = "row_odd"
             else:
                 row_color = "row_even"
-            previous_rank = participant.rank
+            previous_rank = participant_rank
 
         f.write(f"       <tr class=\"{row_color}\">\n")
-        f.write(f"         <td class=\"just_center\">{participant.rank}</td>\n")
-        f.write(f"         <td><a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
+        f.write(f"         <td class=\"just_center\">{participant_rank}</td>\n")
+        species_class = "participant-ai" if participant.species == SpeciesType.SPECIE_AI else "participant-human"
+        f.write(f"         <td><a class=\"participant-hover-link {species_class}\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
         f.write(f"         <td class=\"just_center\"><a class=\"participant-hover-link\" href=\"poolparticipantchoices{participant.native_index}.html\">{participant.total_points}</a></td>\n")
         f.write("       </tr>\n")
 
@@ -2050,6 +2085,10 @@ def write_footer(generation_timestamp: str, f, use_external_path: bool = False, 
 
     f.write("  <td>\n")
     f.write(f"<a href=\"{sub_path}ranking.html\">Ranking</a>\n")
+    f.write("&nbsp;")
+    f.write(f"<a href=\"{sub_path}ranking_human.html\">Humans</a>\n")
+    f.write("&nbsp;")
+    f.write(f"<a href=\"{sub_path}ranking_ai.html\">AI</a>\n")
     f.write("&nbsp;")
     f.write(f"<a href=\"{sub_path}country_stats.html\">CANADA vs USA</a>\n")
     f.write("&nbsp;")
@@ -2098,6 +2137,10 @@ def write_header(generation_timestamp: str, f, use_external_path: bool = False, 
     f.write("  <td class=link-td>\n")
     f.write(f"<a href=\"{sub_path}ranking.html\">Ranking</a>\n")
     f.write("&nbsp;")
+    f.write(f"<a href=\"{sub_path}ranking_human.html\">Humans</a>\n")
+    f.write("&nbsp;")
+    f.write(f"<a href=\"{sub_path}ranking_ai.html\">AI</a>\n")
+    f.write("&nbsp;")
     f.write(f"<a href=\"{sub_path}country_stats.html\">CANADA vs USA</a>\n")
     f.write("&nbsp;")
     f.write(f"<a href=\"{sub_path}office_stats.html\">Bluberi Offices</a>\n")
@@ -2115,14 +2158,27 @@ def write_header(generation_timestamp: str, f, use_external_path: bool = False, 
 
 
 def produce_ranking_grid(generation_timestamp: str, for_website_directory: str, participants: List[Participant]) -> None:
-    # Let's generate a html file with the results
-    with open(os.path.join(for_website_directory, "ranking.html"), 'w', encoding='utf-8', newline='\r\n') as f:
-        # Let's create a table of 20 tables arranged 5 rows of 4 columns
+    # One page per section: ranking.html stays the mixed page, so existing links keep working
+    human_participants = [participant for participant in participants if participant.species == SpeciesType.SPECIE_HUMAN]
+    ai_participants = [participant for participant in participants if participant.species == SpeciesType.SPECIE_AI]
+
+    pages = [
+        ("ranking_human.html", human_participants, "rank_within_specie", "Human"),
+        ("ranking_ai.html", ai_participants, "rank_within_specie", "AI"),
+        ("ranking.html", participants, "rank_mixed_specie", "Human and AI mixed"),
+    ]
+
+    for filename, page_participants, rank_attribute, title in pages:
+        produce_ranking_page(generation_timestamp, for_website_directory, filename, page_participants, rank_attribute, title)
+
+
+def produce_ranking_page(generation_timestamp: str, for_website_directory: str, filename: str, participants: List[Participant], rank_attribute: str, title: str) -> None:
+    with open(os.path.join(for_website_directory, filename), 'w', encoding='utf-8', newline='\r\n') as f:
         f.write("<!DOCTYPE html>\n")
         f.write("<html lang=\"en\">\n")
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
-        f.write(f"    <title>Ranking (Generated on {generation_timestamp})</title>\n")
+        f.write(f"    <title>Ranking {title} (Generated on {generation_timestamp})</title>\n")
         f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
@@ -2132,21 +2188,18 @@ def produce_ranking_grid(generation_timestamp: str, for_website_directory: str, 
 
         write_header(generation_timestamp, f)
 
-        # Let's create a table with three elements
-        # 1. One with a table with participants sorted by their point
-        # 2. One empty area
-        # 3. One with a table with participants sorted by their name
+        # Two tables side by side: sorted by points, then sorted by name
         f.write("     <table class=\"outer-ranking-table\">\n")
         f.write("       <tr>\n")
-        f.write(f"         <th colspan=\"2\" class=\"colspan-2\">Ranking</th>\n")
+        f.write(f"         <th colspan=\"2\" class=\"colspan-2\">Ranking - {title}</th>\n")
         f.write("       </tr>\n")
 
         f.write("       <tr>\n")
         f.write("         <td>\n")
-        write_ranking_table(f, participants, True)
+        write_ranking_table(f, participants, True, rank_attribute, title)
         f.write("         </td>\n")
         f.write("         <td>\n")
-        write_ranking_table(f, participants, False)
+        write_ranking_table(f, participants, False, rank_attribute, title)
         f.write("         </td>\n")
         f.write("       </tr>\n")
         f.write("     </table>\n")
@@ -2255,15 +2308,15 @@ def write_ranking_country_table(f, participants: List[Participant], country: Cou
     previous_rank = -1
 
     for participant in sorted_participants:
-        if participant.rank != previous_rank:
+        if participant.rank_within_specie != previous_rank:
             if row_color == "row_even":
                 row_color = "row_odd"
             else:
                 row_color = "row_even"
-            previous_rank = participant.rank
+            previous_rank = participant.rank_within_specie
 
         f.write(f"       <tr class=\"{row_color}\">\n")
-        f.write(f"         <td class=\"just_center\">{participant.rank}</td>\n")
+        f.write(f"         <td class=\"just_center\">{participant.rank_within_specie}</td>\n")
         f.write(f"         <td><a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
         f.write(f"         <td class=\"just_center\"><a class=\"participant-hover-link\" href=\"poolparticipantchoices{participant.native_index}.html\">{participant.total_points}</a></td>\n")
         f.write("       </tr>\n")
@@ -2272,6 +2325,9 @@ def write_ranking_country_table(f, participants: List[Participant], country: Cou
 
 
 def produce_country_grid(generation_timestamp: str, for_website_directory: str, participants: List[Participant], countries: List[CountryData]) -> None:
+    # This page is about humans only, ranked among humans
+    participants = [participant for participant in participants if participant.species == SpeciesType.SPECIE_HUMAN]
+
     for participant in participants:
         for country_participant in countries:
             if participant.country == country_participant.country_type:
@@ -2312,7 +2368,7 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("<html lang=\"en\">\n")
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
-        f.write(f"    <title>Stats by Country (Generated on {generation_timestamp})</title>\n")
+        f.write(f"    <title>Stats by Country - Humans (Generated on {generation_timestamp})</title>\n")
         f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
@@ -2326,7 +2382,7 @@ def produce_country_grid(generation_timestamp: str, for_website_directory: str, 
         f.write("     <table class=\"outer-table\">\n")
 
         f.write("       <tr>\n")
-        f.write(f"         <th colspan=\"4\" class=\"colspan-4\">Stats by Country</th>\n")
+        f.write(f"         <th colspan=\"4\" class=\"colspan-4\">Stats by Country - Humans</th>\n")
         f.write("       </tr>\n")
 
         f.write("       <tr>\n")
@@ -2415,12 +2471,12 @@ def write_ranking_species_table(f, participants: List[Participant], species: Spe
     previous_rank = -1
 
     for participant in sorted_participants:
-        if participant.rank != previous_rank:
+        if participant.rank_within_specie != previous_rank:
             row_color = "row_odd" if row_color == "row_even" else "row_even"
-            previous_rank = participant.rank
+            previous_rank = participant.rank_within_specie
 
         f.write(f"       <tr class=\"{row_color}\">\n")
-        f.write(f"         <td class=\"just_center\">{participant.rank}</td>\n")
+        f.write(f"         <td class=\"just_center\">{participant.rank_within_specie}</td>\n")
         f.write(f"         <td><a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
         f.write(f"         <td class=\"just_center\"><a class=\"participant-hover-link\" href=\"poolparticipantchoices{participant.native_index}.html\">{participant.total_points}</a></td>\n")
         f.write("       </tr>\n")
@@ -2548,15 +2604,15 @@ def write_ranking_office_table(f, participants: List[Participant], office: Offic
     previous_rank = -1
 
     for participant in sorted_participants:
-        if participant.rank != previous_rank:
+        if participant.rank_within_specie != previous_rank:
             if row_color == "row_even":
                 row_color = "row_odd"
             else:
                 row_color = "row_even"
-            previous_rank = participant.rank
+            previous_rank = participant.rank_within_specie
 
         f.write(f"       <tr class=\"{row_color}\">\n")
-        f.write(f"         <td class=\"just_center\">{participant.rank}</td>\n")
+        f.write(f"         <td class=\"just_center\">{participant.rank_within_specie}</td>\n")
         f.write(f"         <td><a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.name}</a></td>\n")
         f.write(f"         <td class=\"just_center\"><a class=\"participant-hover-link\" href=\"poolparticipantchoices{participant.native_index}.html\">{participant.total_points}</a></td>\n")
         f.write("       </tr>\n")
@@ -2565,6 +2621,9 @@ def write_ranking_office_table(f, participants: List[Participant], office: Offic
 
 
 def produce_office_grid(generation_timestamp: str, for_website_directory: str, participants: List[Participant], offices: List[OfficeData]) -> None:
+    # This page is about humans only, ranked among humans
+    participants = [participant for participant in participants if participant.species == SpeciesType.SPECIE_HUMAN]
+
     for participant in participants:
         for office_participant in offices:
             if participant.office == office_participant.office_type:
@@ -2604,7 +2663,7 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
         f.write("<html lang=\"en\">\n")
         f.write("  <head>\n")
         f.write("     <meta charset=\"UTF-8\">\n")
-        f.write(f"    <title>Stats by Offices (Generated on {generation_timestamp})</title>\n")
+        f.write(f"    <title>Stats by Offices - Humans (Generated on {generation_timestamp})</title>\n")
         f.write(f"    <link rel=\"stylesheet\" type=\"text/css\" href=\"pool_style.css?v={gCSS_VERSION}\">\n")
         f.write(f"    <link rel=\"icon\" href=\"global6.ico\" type=\"image/x-icon\">\n")
         f.write("  </head>\n")
@@ -2618,7 +2677,7 @@ def produce_office_grid(generation_timestamp: str, for_website_directory: str, p
         f.write("     <table class=\"outer-table\">\n")
 
         f.write("       <tr>\n")
-        f.write(f"         <th colspan=\"4\" class=\"colspan-4\">Stats by Offices</th>\n")
+        f.write(f"         <th colspan=\"4\" class=\"colspan-4\">Stats by Offices - Humans</th>\n")
         f.write("       </tr>\n")
 
         f.write("       <tr>\n")
@@ -2712,16 +2771,16 @@ def produce_email_message(generation_timestamp: str, for_website_directory: str,
         previous_rank = -1
 
         for office_participant in email_participants:
-            if office_participant.rank != previous_rank:
+            if office_participant.rank_mixed_specie != previous_rank:
                 if row_color == "row_even":
                     row_color = "row_odd"
                 else:
                     row_color = "row_even"
-                previous_rank = office_participant.rank
+                previous_rank = office_participant.rank_mixed_specie
 
             f.write(f"       <tr class=\"{row_color}\">\n")
             f.write("         <td class=\"just_center\">\n")
-            f.write(f"          {office_participant.rank}\n")
+            f.write(f"          {office_participant.rank_mixed_specie}\n")
             f.write("         </td>\n")
             f.write("         <td class=\"just_center_vertical\">\n")
             f.write(f"          <a href=\"{gExternalPath}poolparticipant{office_participant.native_index}.html\">{office_participant.name}</a>\n")
@@ -2835,19 +2894,20 @@ def write_who_chose_who_box_table(iBoxNumber: int, f, box: Box, choices: List[Ch
 
         # Multi-level sort key:
         # 1) Owner first: (participant is not owner_participant) returns False (0) for owner, True (1) for others
-        # 2) Primary sort: participant.rank
+        # 2) Primary sort: participant.rank_mixed_specie
         # 3) Secondary sort (tie-breaker): locale.strxfrm(participant.name)
         chosen_by.sort(
             key=lambda participant: (
                 owner_participant is not None and participant is not owner_participant,
-                participant.rank,
+                participant.rank_mixed_specie,
                 locale.strxfrm(participant.name)
             )
         )
 
         chosen_by_links = []
         for participant in chosen_by:
-            link_grid = f"<a class=\"participant-hover-link\" href=\"poolparticipant{participant.native_index}.html\">{participant.rank}-{participant.name}</a>"
+            species_class = "participant-ai" if participant.species == SpeciesType.SPECIE_AI else "participant-human"
+            link_grid = f"<a class=\"participant-hover-link {species_class}\" href=\"poolparticipant{participant.native_index}.html\">{participant.rank_mixed_specie}-{participant.name}</a>"
             link_choice = f"<a class=\"participant-hover-link\" href=\"poolparticipantchoices{participant.native_index}.html\">{participant.total_points}</a>"
             if owner_participant is not None and participant is owner_participant:
                 link_grid = f"<span class=\"who-chose-own-participant\">{link_grid}</span>"
@@ -2946,7 +3006,7 @@ def produce_who_chose_who_grid(generation_timestamp: str, for_website_directory:
             f.write("     <table class=\"outer-table\">\n")
             f.write("       <tr>\n")
 
-            header_line = f"{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points"
+            header_line = f"{participant.name} - {participant.total_points} points <BR> {format_rank_header(participant)}"
             header_line += f" - <a href=\"poolparticipantchoices{iParticipantIndex}.html\">Just Choices</a>"
             header_line += f" - <a href=\"poolparticipant{iParticipantIndex}.html\">Grid's choices</a>"
 
@@ -2981,7 +3041,7 @@ def produce_participant_just_choices(generation_timestamp: str, for_website_dire
             f.write("  <body>\n")
             write_header(generation_timestamp, f, participant_native_index=participant.native_index)
 
-            header_line = f"{ordinal(participant.rank)} - {html.escape(participant.name)} - {participant.total_points} points"
+            header_line = f"{html.escape(participant.name)} - {participant.total_points} points <BR>{format_rank_header(participant)}"
             header_line += f" - <a href=\"poolparticipant{iParticipantIndex}.html\">Grid's choices</a>"
             f.write("     <table class=\"outer-table\" border='0' style=\"width: 700px;\">\n")
             f.write("<colgroup>\n")
@@ -3113,7 +3173,7 @@ def produce_personal_grid(generation_timestamp: str, for_website_directory: str,
             if gFlagSelectionGrid:
                 header_line = 'Grille de Sélection / Selection Grid'
             else:
-                header_line = f"{ordinal(participant.rank)} - {participant.name} - {participant.total_points} points"
+                header_line = f"{participant.name} - {participant.total_points} points<BR>{format_rank_header(participant)}"
                 header_line += f" - <a href=\"poolparticipantchoices{iParticipantIndex}.html\">Just Choices</a>"
 
             f.write("       <tr>\n")
