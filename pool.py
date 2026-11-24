@@ -21,7 +21,7 @@ import platform
 IS_WINDOWS = platform.system() == "Windows"
 IS_LINUX = platform.system() == "Linux"
 
-gCSS_VERSION = "2026.1023.1650.1"
+gCSS_VERSION = "2026.1124.0803.1"
 
 if IS_WINDOWS:
     print("Running on Windows")
@@ -293,7 +293,7 @@ def init_choices(choices: list):
     choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8484153", "Leo Carlsson", "ANA", 0, 0, 0, 0, 0))
     choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8475786", "Zach Hyman", "EDM", 0, 0, 0, 0, 0))
     choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8477960", "Adrian Kempe", "LAK", 0, 0, 0, 0, 0))
-    choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8477946", "Dylan Larkin", "DET", 0, 0, 0, 0, 0))
+    choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8477946", "Dylan Larkin", "MTL", 0, 0, 0, 0, 0))
     choices.append(Choice(10, BoxStyle.TBS_SKATERS, "8477951", "Nick Schmaltz", "UTA", 0, 0, 0, 0, 0))
 
     choices.append(Choice(11, BoxStyle.TBS_SKATERS, "8478445", "Mathew Barzal", "NYI", 0, 0, 0, 0, 0))
@@ -331,7 +331,7 @@ def init_choices(choices: list):
     choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8483515", "Juraj Slafkovský", "MTL", 0, 0, 0, 0, 0))
     choices.append(Choice(15, BoxStyle.TBS_SKATERS, "8477447", "Shea Theodore", "VGK", 0, 0, 0, 0, 0))
 
-    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8481523", "Kirby Dach", "MTL", 0, 0, 0, 0, 0))
+    choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8481523", "Kirby Dach", "DET", 0, 0, 0, 0, 0))
     choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8476455", "Gabriel Landeskog", "COL", 0, 0, 0, 0, 0))
     choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8471724", "Kris Letang", "PIT", 0, 0, 0, 0, 0))
     choices.append(Choice(16, BoxStyle.TBS_SKATERS, "8480064", "Josh Norris", "BUF", 0, 0, 0, 0, 0))
@@ -602,7 +602,7 @@ def init_participants(participants: list) -> None:
     participants.append(Participant("François Désilets", [5, 9, 12, 20, 28, 30, 38, 45, 49, 54, 62, 68, 73, 78, 87, 91, 101, 105, 110, 116, 125, 128, 136, 139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE, SpeciesType.SPECIE_HUMAN))
     participants.append(Participant("François Hébert", [1, 6, 16, 19, 26, 32, 38, 45, 49, 54, 61, 71, 76, 78, 88, 94, 101, 103, 108, 115, 121, 127, 136, 141], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE, SpeciesType.SPECIE_HUMAN))
     participants.append(Participant("François Leger", [0, 11, 17, 22, 28, 33, 38, 42, 50, 59, 65, 66, 75, 78, 87, 94, 101, 106, 112, 115, 122, 130, 137, 143], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_MONCTON, SpeciesType.SPECIE_HUMAN))
-    participants.append(Participant("François Pelletier", [1, 8, 16, 22, 28, 32, 38, 44, 50, 59, 63, 71, 73, 78, 87, 94, 101, 107, 108, 115, 121, 131, 137, 142], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE, SpeciesType.SPECIE_HUMAN))
+#   participants.append(Participant("François Pelletier", [1, 8, 16, 22, 28, 32, 38, 44, 50, 59, 63, 71, 73, 78, 87, 94, 101, 107, 108, 115, 121, 131, 137, 142], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE, SpeciesType.SPECIE_HUMAN))
     participants.append(Participant("François Vigneault", [1, 6, 16, 19, 26, 32, 37, 44, 50, 57, 62, 71, 74, 81, 88, 94, 99, 103, 113, 116, 121, 131, 136, 139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE, SpeciesType.SPECIE_HUMAN))
     participants.append(Participant("Gabe Herod", [1, 11, 16, 19, 28, 32, 38, 42, 50, 54, 61, 71, 73, 78, 88, 91, 101, 103, 112, 115, 122, 131, 137, 142], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN, SpeciesType.SPECIE_HUMAN))
     participants.append(Participant("Ginette Mckay", [0, 8, 16, 22, 28, 32, 38, 45, 50, 57, 62, 66, 75, 83, 87, 91, 100, 107, 108, 117, 123, 130, 136, 143], SexType.SEX_FEMALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_AUSTIN, SpeciesType.SPECIE_HUMAN))
@@ -661,6 +661,9 @@ def init_participants(participants: list) -> None:
     participants.append(Participant("Copilot (SChabot)", [1,6,17,22,28,32,38,44,50,54,61,71,73,78,85,94,101,107,112,115,122,131,137,142], SexType.SEX_FEMALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE, SpeciesType.SPECIE_AI))
     participants.append(Participant("Copilot Pro (ITrudelDenis)", [2,8,16,23,28,35,40,44,52,54,60,69,76,78,85,91,100,107,112,115,122,131,137,142], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE, SpeciesType.SPECIE_AI))
     participants.append(Participant("Perplexity (FHebert)", [1,6,13,19,26,31,38,42,49,54,61,71,73,78,88,91,100,105,108,115,125,131,136,139], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE, SpeciesType.SPECIE_AI))
+    participants.append(Participant("CoPilot (OLafrenière)", [1,8,17,22,27,33,41,45,49,57,60,69,73,81,87,91,100,105,112,115,123,130,134,142], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE, SpeciesType.SPECIE_AI))
+    participants.append(Participant("Grok4-7 (MADaoud)", [1,8,16,20,28,32,38,44,52,57,61,71,75,78,88,94,101,107,108,114,121,131,136,143], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE, SpeciesType.SPECIE_AI))
+
 
     # participants.append(Participant("John Doe Drummondville", [0,6,12,18,24,30,36,42,48,54,60,66,72,78,84,90,96,102,108,114,120,126,132,138], SexType.SEX_MALE, CountryType.COUNTRY_CANADA, OfficeType.OFFICE_DRUMMONDVILLE))
     # participants.append(Participant("John Doe Las Vegas", [1,7,13,19,25,31,37,43,49,55,61,67,73,79,85,91,97,103,109,115,121,127,133,139], SexType.SEX_MALE, CountryType.COUNTRY_USA, OfficeType.OFFICE_LAS_VEGAS))
@@ -3394,8 +3397,10 @@ def do_all_the_work(flag_compare_nhl_vs_officepools: bool) -> None:
         export_choices_to_csv(choices, gTemporaryDirectory / "choices.csv")
 
     if gProcessChoicesFromTmp:
+        print("Processing choice files from temporary directory...")
         participant_directory = Path("c:/tmp/Excel")
         process_choice_files(choices, participant_directory)
+        print("Finished processing choice files from temporary directory.")
 
     # For current debugging prupose, halt script execution here.
     # sys.exit(0)
